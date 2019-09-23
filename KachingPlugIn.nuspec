@@ -1,0 +1,25 @@
+﻿<?xml version="1.0"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
+  <metadata>
+    <id>KachingPlugIn</id>
+    <version>$version$</version>
+    <title>KachingPlugIn</title>
+    <authors>ka.ching.developers</authors>
+    <owners>Ka-ching A/S</owners>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <description>Builds Kaching Plug In Add On</description>
+    <copyright>Copyright © 2019</copyright>
+    <tags>EPiServerModulePackage</tags>
+    <dependencies>
+      <dependency id="EPiServer.CMS.Core" version="[11.0.0, 12.0)" />
+      <dependency id="EPiServer.CMS.UI.Core" version="[11.0.0, 12.0)" />
+      <dependency id="EPiServer.Commerce.Core" version="[11.0.0, 12.0)" />
+    </dependencies>
+  </metadata>
+  <files>
+    <file src="bin\$configuration$\KachingPlugIn.dll" target="lib\net461\" />
+    <file src="bin\$configuration$\KachingPlugIn.zip" target="content\modules\_protected\KachingPlugIn\" />
+	  <file src="web.config.install.xdt" target="content" />
+    <file src="web.config.uninstall.xdt" target="content" />
+  </files>
+</package>

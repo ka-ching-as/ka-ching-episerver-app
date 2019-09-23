@@ -1,0 +1,114 @@
+﻿@model KachingPlugIn.ViewModels.KachingPlugInViewModel
+
+<!DOCTYPE html>
+
+<html>
+<head>
+    <title>Ka-ching integration</title>
+</head>
+
+<body>
+    <div>
+        <h2>Ka-ching integration</h2>
+
+        <hr />
+
+        @if (Model.ProgressViewModel.Busy)
+        {
+            <div id="progress">
+                @Html.Partial("Progress", Model.ProgressViewModel)
+            </div>
+        }
+        else
+        {
+            <h3>Specify import URLs</h3>
+
+            using (Html.BeginForm("UpdateProductImportUrl", "KachingPlugIn", FormMethod.Post, new { @class = "form-inline" }))
+            {
+                <p>Products import URL</p>
+                @Html.TextBoxFor(m => m.ProductsImportUrl)
+                <button type="submit">Save</button>
+            }
+            using (Html.BeginForm("UpdateTagsImportUrl", "KachingPlugIn", FormMethod.Post, new { @class = "form-inline" }))
+            {
+                <p>Tags import URL</p>
+                @Html.TextBoxFor(m => m.TagsImportUrl)
+                <button type="submit">Save</button>
+            }
+            using (Html.BeginForm("UpdateFoldersImportUrl", "KachingPlugIn", FormMethod.Post, new { @class = "form-inline" }))
+            {
+                <p>Folders import URL</p>
+                @Html.TextBoxFor(m => m.FoldersImportUrl)
+                <button type="submit">Save</button>
+            }
+
+            <br />
+            <hr />
+
+            using (Html.BeginForm("StartFullProductExport", "KachingPlugIn", FormMethod.Post, new { @class = "form-inline" }))
+            {
+                <h3>Perform full product export</h3>
+                if (Model.ProductExportStartButtonDisabled)
+                {
+                    <p><em>Attention:</em> Requires valid products import URL. Find the URL in <a href="https://backoffice.ka-ching.dk" target="_blank"> Ka-ching Backoffice</a></p>
+                }
+                <button type="submit" onclick="scheduleReloadProgressElement();" disabled='@(Model.ProductExportStartButtonDisabled)'>Start</button>
+            }
+
+            <br />
+            <hr />
+
+            using (Html.BeginForm("StartFullCategoryExport", "KachingPlugIn", FormMethod.Post, new { @class = "form-inline" }))
+            {
+                <h3>Perform full category export</h3>
+                if (Model.CategoryExportStartButtonDisabled)
+                {
+                    <p><em>Attention:</em> Requires valid tags and folders import URLs. Find the URLs in <a href="https://backoffice.ka-ching.dk" target="_blank"> Ka-ching Backoffice</a></p>
+                }
+                <button type="submit" onclick="scheduleReloadProgressElement();" disabled='@(Model.CategoryExportStartButtonDisabled)'>Start</button>
+            }
+
+            if (Model.ProgressViewModel.Error)
+            {
+                <p>Error - operation aborted. See log files for more information.</p>
+            }
+        }
+    </div>
+</body>
+</html>
+<style type="text/css">
+    input[type="text"] {
+        width: 350px;
+    }
+</style>
+<script src="~/Scripts/jquery-1.11.1.js" type="text/javascript"></script>
+<script>
+    function reloadPage() {
+        console.log("reloadPage");
+        window.location.reload();
+    }
+    function reloadProgressElement() {
+        console.log("reloadProgressElement");
+        var url = '@Url.Action("Poll", new { })';
+        $.get(url, function (data) {
+            $("#progress").empty().append(data);
+            var shouldScheduleReload = shouldSchedulePoll();
+            if (shouldScheduleReload) {
+                scheduleReloadProgressElement();
+            } else {
+                reloadPage();
+            }
+        });
+    }
+    function scheduleReloadProgressElement() {
+        window.setTimeout(reloadProgressElement, 500);
+        console.log("scheduleReloadProgressElement");
+    }
+    document.addEventListener("DOMContentLoaded", function (event) {
+        console.log("DOMContentLoaded");
+        if ('@(Model.ProgressViewModel.Busy)' === '@true') {
+            scheduleReloadProgressElement();
+        }
+    });
+</script>
+
