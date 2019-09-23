@@ -29,7 +29,7 @@ namespace KachingPlugIn.Controllers
 
         public ActionResult Index()
         {
-            var configuration = KachingPlugInConfiguration.Instance();
+            var configuration = Configuration.Instance();
 
             var viewModel = new KachingPlugInViewModel();
             viewModel.ProgressViewModel = BuildProgressViewModel();
@@ -45,7 +45,7 @@ namespace KachingPlugIn.Controllers
         [HttpPost]
         public ActionResult StartFullProductExport()
         {
-            var configuration = KachingPlugInConfiguration.Instance();
+            var configuration = Configuration.Instance();
             _productExport.StartFullProductExport(configuration.ProductsImportUrl);
             return RedirectToAction("Index");
         }
@@ -54,7 +54,7 @@ namespace KachingPlugIn.Controllers
         public ActionResult StartFullCategoryExport()
         {
             _log.Information("StartFullCategoryExport");
-            var configuration = KachingPlugInConfiguration.Instance();
+            var configuration = Configuration.Instance();
             _categoryExport.StartFullCategoryExport(configuration.TagsImportUrl, configuration.FoldersImportUrl);
             return RedirectToAction("Index");
         }
@@ -63,7 +63,7 @@ namespace KachingPlugIn.Controllers
         public ActionResult UpdateProductImportUrl(string ProductsImportUrl)
         {
             _log.Information("UpdateProductImportUrl: " + ProductsImportUrl);
-            var configuration = KachingPlugInConfiguration.Instance();
+            var configuration = Configuration.Instance();
             configuration.ProductsImportUrl = ProductsImportUrl;
             configuration.Save();
             return RedirectToAction("Index");
@@ -74,7 +74,7 @@ namespace KachingPlugIn.Controllers
         public ActionResult UpdateTagsImportUrl(string TagsImportUrl)
         {
             _log.Information("UpdateTagsImportUrl: " + TagsImportUrl);
-            var configuration = KachingPlugInConfiguration.Instance();
+            var configuration = Configuration.Instance();
             configuration.TagsImportUrl = TagsImportUrl;
             configuration.Save();
             return RedirectToAction("Index");
@@ -84,7 +84,7 @@ namespace KachingPlugIn.Controllers
         public ActionResult UpdateFoldersImportUrl(string FoldersImportUrl)
         {
             _log.Information("UpdateFoldersImportUrl: " + FoldersImportUrl);
-            var configuration = KachingPlugInConfiguration.Instance();
+            var configuration = Configuration.Instance();
             configuration.FoldersImportUrl = FoldersImportUrl;
             configuration.Save();
             return RedirectToAction("Index");

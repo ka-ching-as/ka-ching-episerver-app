@@ -4,21 +4,21 @@ using System;
 
 namespace KachingPlugIn.Models
 {
-    public class KachingPlugInConfiguration : IDynamicData
+    public class Configuration : IDynamicData
     {
-        private static Identity ID = Identity.NewIdentity(new Guid("459f9041-e454-4bc3-ab92-b7867ab7c863"));
+        private static Identity ID = Identity.NewIdentity(new Guid("9f070fad-4c4c-49c6-9443-510ab091500a"));
 
         private static DynamicDataStore Store()
         {
-            return DynamicDataStoreFactory.Instance.CreateStore("KachingPlugInConfiguration", typeof(KachingPlugInConfiguration));
+            return DynamicDataStoreFactory.Instance.CreateStore("Kaching.AddOn.Configuration", typeof(Configuration));
         } 
 
-        public static KachingPlugInConfiguration Instance()
+        public static Configuration Instance()
         {
-            var result = Store().Load(ID) as KachingPlugInConfiguration;
+            var result = Store().Load(ID) as Configuration;
             if (result == null)
             {
-                result = new KachingPlugInConfiguration();
+                result = new Configuration();
                 result.Save();
             }
             return result;
@@ -30,14 +30,14 @@ namespace KachingPlugIn.Models
         public string TagsImportUrl { get; set; }
         public string FoldersImportUrl { get; set; }
 
-        public KachingPlugInConfiguration()
+        public Configuration()
         {
             Initialize();
         }
 
         private void Initialize()
         {
-            Id = KachingPlugInConfiguration.ID;
+            Id = Configuration.ID;
             ProductsImportUrl = string.Empty;
             TagsImportUrl = string.Empty;
             FoldersImportUrl = string.Empty;

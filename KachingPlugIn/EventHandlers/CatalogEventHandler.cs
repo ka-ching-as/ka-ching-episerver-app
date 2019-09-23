@@ -211,7 +211,7 @@ namespace KachingPlugIn.EventHandlers
             _log.Information("HandleProductChange: " + product.Code, " isDelete: " + isDelete.ToString());
 
             // Make sure we have valid import endpoints configured before handling the change
-            var configuration = KachingPlugInConfiguration.Instance();
+            var configuration = Configuration.Instance();
             if (!configuration.ProductsImportUrl.IsValidProductsImportUrl())
             {
                 _log.Error("Ka-ching product import url is not valid: " + configuration.ProductsImportUrl);
@@ -248,7 +248,7 @@ namespace KachingPlugIn.EventHandlers
         {
             _log.Information("HandleCategoryChange - type: " + changeType.ToString() + " code: " + node.Code);
             // Make sure we have valid import endpoints configured before handling the change
-            var configuration = KachingPlugInConfiguration.Instance();
+            var configuration = Configuration.Instance();
             if (!configuration.TagsImportUrl.IsValidTagsImportUrl() || 
                 !configuration.FoldersImportUrl.IsValidFoldersImportUrl() ||
                 !configuration.ProductsImportUrl.IsValidProductsImportUrl())
