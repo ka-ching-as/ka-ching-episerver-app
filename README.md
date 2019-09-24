@@ -10,19 +10,22 @@ TODO
 
 ## Handled data
 
-- Products
+### Products
+
  * Display name for all defined languages
  * Prices for all markets
  * First image present if any
  * All parent categories are added as tags to enable folder structure in Ka-ching
-- Variations
+
+### Variations
+
  * Display name for all defined languages
  * Prices for all markets
  * First image present if any
-- Categories
- * Display name for all defined languages
 
-Ka-ching doesn't support product bundles or packages out of the box, so these have been skipped in this version. It might be added in a future version.
+### Categories
+
+ * Display name for all defined languages
 
 ## Assumptions and limitations
 This solution assumes the following:
@@ -34,7 +37,13 @@ This solution assumes the following:
 
 We might be able to remove some or all of those in future versions.
 
+### Custom properties
+
 This solution also doesn't handle any custom properties defined on products, variations or categories. There are some comments in the code to show how size, color and description, as defined in Quicksilver, could be handled.
+
+### Bundles and packages
+
+Ka-ching doesn't support product bundles or packages out of the box, so these have been skipped in this version. It might be added in a future version.
 
 ## Handled events
 
