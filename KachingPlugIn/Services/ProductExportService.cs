@@ -19,7 +19,7 @@ namespace KachingPlugIn.Services
         private readonly ReferenceConverter _referenceConverter;
         private readonly IContentLoader _contentLoader;
         private readonly IContentVersionRepository _contentVersionRepository;
-        private readonly KachingProductFactory _productFactory;
+        private readonly ProductFactory _productFactory;
         private readonly ILogger _log = LogManager.GetLogger(typeof(ProductExportService));
         private readonly int _batchSize = 1000;
 
@@ -29,7 +29,7 @@ namespace KachingPlugIn.Services
             ReferenceConverter referenceConverter,
             IContentLoader contentLoader,
             IContentVersionRepository contentVersionRepository,
-            KachingProductFactory productFactory)
+            ProductFactory productFactory)
         {
             _referenceConverter = referenceConverter;
             _contentLoader = contentLoader;
@@ -81,7 +81,7 @@ namespace KachingPlugIn.Services
 
             var ids = new List<string>();
             ids.Add(product.Code.KachingCompatibleKey());
-            var statusCode = KachingAPIFacade.Delete(ids, url);
+            var statusCode = APIFacade.Delete(ids, url);
             _log.Information("Status code: " + statusCode.ToString());
         }
 
@@ -95,7 +95,7 @@ namespace KachingPlugIn.Services
             // TODO - getting product ids here is enough.
             var products = BuildKachingProducts(categories, tags);
             var ids = products.Select(p => p.Id);
-            KachingAPIFacade.Delete(ids.ToList(), url);
+            APIFacade.Delete(ids.ToList(), url);
         }
 
         public void ExportProduct(ProductContent product, string deletedVariantCode, string url)
@@ -114,7 +114,7 @@ namespace KachingPlugIn.Services
             // up the tree of nodes to find the correct tags for the product
             var tags = TagsForProduct(product);
             var kachingProduct = _productFactory.BuildKaChingProduct(product, tags, deletedVariantCode);
-            var products = new List<KachingProduct>();
+            var products = new List<Product>();
             products.Add(kachingProduct);
             PostKachingProducts(products, url);
         }
@@ -149,9 +149,9 @@ namespace KachingPlugIn.Services
             ResetState(false);
         }
 
-        private IList<KachingProduct> BuildKachingProducts(IEnumerable<NodeContent> nodes, IList<string> tags)
+        private IList<Product> BuildKachingProducts(IEnumerable<NodeContent> nodes, IList<string> tags)
         {
-            var kachingProducts = new List<KachingProduct>();
+            var kachingProducts = new List<Product>();
 
             foreach (var node in nodes)
             {
@@ -225,7 +225,7 @@ namespace KachingPlugIn.Services
             return result;
         }
 
-        private void PostKachingProducts(IList<KachingProduct> products, string url)
+        private void PostKachingProducts(IList<Product> products, string url)
         {
             _log.Information("Number of products: " + products.Count);
 
@@ -251,13 +251,13 @@ namespace KachingPlugIn.Services
             }
         }
 
-        private void PostBatchOfKachingProducts(IList<KachingProduct> batch, string url)
+        private void PostBatchOfKachingProducts(IList<Product> batch, string url)
         {
-            var statusCode = KachingAPIFacade.Post(JsonWrapper(batch), url);
+            var statusCode = APIFacade.Post(JsonWrapper(batch), url);
             _log.Information("Status code: " + statusCode.ToString());
         }
 
-        private object JsonWrapper(IList<KachingProduct> products)
+        private object JsonWrapper(IList<Product> products)
         {
             return new
             {

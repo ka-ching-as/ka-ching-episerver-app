@@ -63,6 +63,8 @@
     <MakeDir Directories="$(TmpOutDir)\content\$(Version)" />
 
     <Copy SourceFiles="$(SolutionDir)\module.config" DestinationFolder="$(TmpOutDir)\content" />
+    <Copy SourceFiles="$(SolutionDir)KachingPlugIn\Views\Index.cshtml" DestinationFolder="$(TmpOutDir)\content\Views" />
+    <Copy SourceFiles="$(SolutionDir)KachingPlugIn\Views\Progress.cshtml" DestinationFolder="$(TmpOutDir)\content\Views" />
 
     <!-- Update the module config with the version information -->
     <XmlPoke XmlInputPath="$(TmpOutDir)\content\module.config" Query="/module/@clientResourceRelativePath" Value="$(Version)" />

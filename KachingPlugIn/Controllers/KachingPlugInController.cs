@@ -11,7 +11,7 @@ namespace KachingPlugIn.Controllers
     [GuiPlugIn(
         Area = PlugInArea.AdminMenu,
         Url = "/modules/KachingPlugIn/Controllers",
-        LanguagePath = "/modules/KachingPlugIn/Language",
+        LanguagePath = "/modules/KachingPlugIn/EmbeddedLangFiles",
         DisplayName = "Ka-ching Integration")]
     public class KachingPlugInController : Controller
     {
@@ -31,15 +31,16 @@ namespace KachingPlugIn.Controllers
         {
             var configuration = Configuration.Instance();
 
-            var viewModel = new KachingPlugInViewModel();
+            var viewModel = new PlugInViewModel();
             viewModel.ProgressViewModel = BuildProgressViewModel();
+            viewModel.ProgressViewLocation = ViewLocation("Progress");
             viewModel.ProductsImportUrl = configuration.ProductsImportUrl;
             viewModel.TagsImportUrl = configuration.TagsImportUrl;
             viewModel.FoldersImportUrl = configuration.FoldersImportUrl;
             viewModel.ProductExportStartButtonDisabled = !configuration.ProductsImportUrl.IsValidProductsImportUrl();
             viewModel.CategoryExportStartButtonDisabled = !configuration.TagsImportUrl.IsValidTagsImportUrl() || !configuration.FoldersImportUrl.IsValidFoldersImportUrl();
 
-            return PartialView(viewModel);
+            return PartialView(ViewLocation("Index"), viewModel);
         }
 
         [HttpPost]
@@ -101,8 +102,8 @@ namespace KachingPlugIn.Controllers
             {
                 _categoryExport.Polls += 1;
             }
-            
-            return PartialView("Progress", BuildProgressViewModel());
+
+            return PartialView(ViewLocation("Progress"), BuildProgressViewModel());
         }
 
         private ProgressViewModel BuildProgressViewModel()
@@ -137,6 +138,11 @@ namespace KachingPlugIn.Controllers
             }
             
             return result;
+        }
+
+        private string ViewLocation(string viewName)
+        {
+            return $"{EPiServer.Shell.Paths.ProtectedRootPath}KachingPlugIn/Views/{viewName}.cshtml";
         }
     }
 }

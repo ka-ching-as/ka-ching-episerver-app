@@ -2,7 +2,7 @@
 
 namespace KachingPlugIn.Models
 {
-    public class KachingProduct
+    public class Product
     {
         public L10nString Name { get; set; }
         public L10nString Description { get; set; }

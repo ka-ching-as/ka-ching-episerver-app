@@ -15,16 +15,16 @@ using EPiServer;
 
 namespace KachingPlugIn.Factories
 {
-    public class KachingProductFactory
+    public class ProductFactory
     {
         private readonly IContentLoader _contentLoader;
         private readonly IMarketService _marketService;
         private readonly IUrlResolver _urlResolver;
         private readonly IPriceService _priceService;
         private readonly L10nStringFactory _l10nStringFactory;
-        private readonly ILogger _log = LogManager.GetLogger(typeof(KachingProductFactory));
+        private readonly ILogger _log = LogManager.GetLogger(typeof(ProductFactory));
 
-        public KachingProductFactory(
+        public ProductFactory(
             IContentLoader contentLoader,
             IMarketService marketService,
             IUrlResolver urlResolver,
@@ -38,9 +38,9 @@ namespace KachingPlugIn.Factories
             _l10nStringFactory = l10NStringFactory;
         }
 
-        public KachingProduct BuildKaChingProduct(ProductContent product, IList<string> tags, string skipVariantCode)
+        public Product BuildKaChingProduct(ProductContent product, IList<string> tags, string skipVariantCode)
         {
-            var kachingProduct = new KachingProduct();
+            var kachingProduct = new Product();
 
             /* ---------------------------- */
             /* Assign id */

@@ -1,4 +1,10 @@
-﻿@model KachingPlugIn.ViewModels.KachingPlugInViewModel
+﻿@using System.Web.Mvc
+@using System.Web.Mvc.Html
+@inherits System.Web.Mvc.WebViewPage<KachingPlugIn.ViewModels.PlugInViewModel>
+
+@{
+    Layout = null;
+}
 
 <!DOCTYPE html>
 
@@ -16,7 +22,7 @@
         @if (Model.ProgressViewModel.Busy)
         {
             <div id="progress">
-                @Html.Partial("Progress", Model.ProgressViewModel)
+                @Html.Partial(Model.ProgressViewLocation, Model.ProgressViewModel)
             </div>
         }
         else

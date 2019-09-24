@@ -33,15 +33,15 @@
   <ItemGroup>
     <Compile Include="KachingPlugIn\Controllers\KachingPlugInController.cs" />
     <Compile Include="KachingPlugIn\EventHandlers\CatalogEventHandler.cs" />
-    <Compile Include="KachingPlugIn\Factories\KachingProductFactory.cs" />
+    <Compile Include="KachingPlugIn\Factories\ProductFactory.cs" />
     <Compile Include="KachingPlugIn\Factories\L10nStringFactory.cs" />
-    <Compile Include="KachingPlugIn\Helpers\KachingAPIFacade.cs" />
+    <Compile Include="KachingPlugIn\Helpers\APIFacade.cs" />
     <Compile Include="KachingPlugIn\Helpers\StringExtensions.cs" />
-    <Compile Include="KachingPlugIn\Initialization\KachingPluginInitialization.cs" />
+    <Compile Include="KachingPlugIn\Initialization\Initialization.cs" />
     <Compile Include="KachingPlugIn\Models\Folder.cs" />
     <Compile Include="KachingPlugIn\Models\Configuration.cs" />
-    <Compile Include="KachingPlugIn\Models\KachingProduct.cs" />
-    <Compile Include="KachingPlugIn\Models\KachingTag.cs" />
+    <Compile Include="KachingPlugIn\Models\Product.cs" />
+    <Compile Include="KachingPlugIn\Models\Tag.cs" />
     <Compile Include="KachingPlugIn\Models\L10nString.cs" />
     <Compile Include="KachingPlugIn\Models\MarketPrice.cs" />
     <Compile Include="KachingPlugIn\Models\ProductMetadata.cs" />
@@ -50,7 +50,7 @@
     <Compile Include="KachingPlugIn\Services\IExportState.cs" />
     <Compile Include="KachingPlugIn\Services\ProductExportService.cs" />
     <Compile Include="KachingPlugIn\Services\ProductExportSingleton.cs" />
-    <Compile Include="KachingPlugIn\ViewModels\KachingPlugInViewModel.cs" />
+    <Compile Include="KachingPlugIn\ViewModels\PlugInViewModel.cs" />
     <Compile Include="KachingPlugIn\ViewModels\ProgressViewModel.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

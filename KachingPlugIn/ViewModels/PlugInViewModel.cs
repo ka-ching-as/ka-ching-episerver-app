@@ -1,6 +1,6 @@
 ﻿namespace KachingPlugIn.ViewModels
 {
-    public class KachingPlugInViewModel
+    public class PlugInViewModel
     {
         public string ProductsImportUrl { get; set; }
         public string TagsImportUrl { get; set; }
@@ -8,5 +8,6 @@
         public bool ProductExportStartButtonDisabled { get; set; }
         public bool CategoryExportStartButtonDisabled { get; set; }
         public ProgressViewModel ProgressViewModel { get; set; }
+        public string ProgressViewLocation { get; set; }
     }
 }

@@ -9,7 +9,7 @@ namespace KachingPlugIn.Intialization
 {
     [InitializableModule]
     [ModuleDependency(typeof(EPiServer.Web.InitializationModule))]
-    public class KachingPlugInInitialization : IInitializableHttpModule
+    public class PlugInInitialization : IInitializableHttpModule
     {
         private string _pluginName = "KachingPlugIn";
         private bool _initialized;

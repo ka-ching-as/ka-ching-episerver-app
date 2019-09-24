@@ -7,9 +7,9 @@ using System.Net;
 
 namespace KachingPlugIn.Helpers
 {
-    public class KachingAPIFacade
+    public class APIFacade
     {
-        private static readonly ILogger _log = LogManager.GetLogger(typeof(KachingAPIFacade));
+        private static readonly ILogger _log = LogManager.GetLogger(typeof(APIFacade));
 
         public static HttpStatusCode Delete(IList<string> ids, string url)
         {

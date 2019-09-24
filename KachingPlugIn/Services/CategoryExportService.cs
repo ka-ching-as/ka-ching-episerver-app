@@ -17,12 +17,12 @@ namespace KachingPlugIn.Services
     class FoldersAndTags
     {
         internal List<Folder> Folders { get; private set; }
-        internal IDictionary<string, KachingTag> Tags { get; private set; }
+        internal IDictionary<string, Tag> Tags { get; private set; }
 
         internal FoldersAndTags()
         {
             Folders = new List<Folder>();
-            Tags = new Dictionary<string, KachingTag>();
+            Tags = new Dictionary<string, Tag>();
         }
     }
 
@@ -117,17 +117,17 @@ namespace KachingPlugIn.Services
                     continue;
                 }
 
-                var tag = new KachingTag();
+                var tag = new Tag();
 
-                tag.Tag = node.Code.KachingCompatibleKey();
+                tag.TagValue = node.Code.KachingCompatibleKey();
 
                 tag.Name = _l10nStringFactory.LocalizedCategoryName(node);
 
                 _log.Information("Category code: " + node.Code);
 
-                result.Tags[tag.Tag] = tag;
+                result.Tags[tag.TagValue] = tag;
 
-                var folder = new Folder(tag.Tag);
+                var folder = new Folder(tag.TagValue);
                 result.Folders.Add(folder);
 
                 var childrenNodes = _contentLoader.GetChildren<NodeContent>(node.ContentLink);
@@ -147,7 +147,7 @@ namespace KachingPlugIn.Services
 
         private void Post<T>(List<T> entitiesList, string url)
         {
-            var statusCode = KachingAPIFacade.Post(entitiesList, url);
+            var statusCode = APIFacade.Post(entitiesList, url);
             _log.Information("Status code: " + statusCode.ToString());
         }
 
