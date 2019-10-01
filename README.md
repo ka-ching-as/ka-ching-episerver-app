@@ -1,31 +1,55 @@
-# Ka-ching Episerver Add-On
+[![Ka-ching logo](https://ka-ching.dk/media/4o4gwh5o/ka-ching-logo-black-1x.svg)](https://ka-ching.dk)
 
-![](https://raw.githubusercontent.com/ka-ching-as/ka-ching-episerver-app/master/Images/EpiserverKachingPlugIn.png)
+[Ka-ching](https://ka-ching.dk) is a digital sales tool for retailers that bridges retail and online through assisted selling.
+
+# Episerver Add-On
+
+![Admin Plug-In Screenshot](https://raw.githubusercontent.com/ka-ching-as/ka-ching-episerver-app/master/Images/EpiserverKachingPlugIn.png)
 
 ## Concept
 
-TODO
+This Episerver Add-On aims at making it easy to use the awesome capabilities and information in Episerver Commerce as a sales tool in retail stores by integrating with Ka-ching.
 
-[Ka-ching](https://ka-ching.dk)
+The current implementation is developed and tested using the Episerver reference commerce site [Quicksilver](https://github.com/episerver/Quicksilver). In it's current state it this add-on is mostly a reference point and accelerator for further implementation and customization in real case scenarios.
+
+All development on this add-on is open source under the MIT license. Contributions are very welcome.
+
+Our apps are not in the iOS App Store yet, so [contact us](https://ka-ching.dk/about-us/) to get hold of the install links.
+
+## Manual setup in Ka-ching
+
+This section assumes you have a Ka-ching account. Get in touch using the contact details found [here](https://ka-ching.dk/about-us/) if you need an account.
+
+Go to [Ka-ching Backoffice](https://backoffice.ka-ching.dk/login) to manage the manual data maintenance listed below. 
+
+More info on how to use the Ka-ching Backoffice can be found on our [Zendesk site](https://ka-ching.zendesk.com).
+
+* Create default taxes that will be applied to all products.
+* Create markets with matching ids. Select appropriate default taxes for the new markets.
+* Create and configure shops. Select appropriate market for each of the shops.
+* Create cashiers for each shop.
+* Create and invite the appropriate users needed. Ususally a shop manager for each shop is enough.
+
+That should do it.
 
 ## Handled data
 
 ### Products
 
- * Display name for all defined languages
- * Prices for all markets
- * First image present if any
- * All parent categories are added as tags to enable folder structure in Ka-ching
+ * Display name for all defined languages.
+ * Prices for all markets.
+ * First image present if any.
+ * All parent categories are added as tags to enable folder structure in Ka-ching.
 
 ### Variations
 
- * Display name for all defined languages
- * Prices for all markets
- * First image present if any
+ * Display name for all defined languages.
+ * Prices for all markets.
+ * First image present if any.
 
 ### Categories
 
- * Display name for all defined languages
+ * Display name for all defined languages.
 
 ## Assumptions and limitations
 This solution assumes the following:
@@ -34,12 +58,21 @@ This solution assumes the following:
 - Products only have variations as children.
 - Products only have categories as parents.
 - Variations only have products as parents.
+- Only 1 catalog.
 
 We might be able to remove some or all of those in future versions.
+
+### Note on prices
+
+Ka-ching prices are including VAT style taxes and excluding "sales tax" style taxes. This solution assumes that the value in IPriceAmount.UnitPrice.Amount uses the same semantics.
 
 ### Custom properties
 
 This solution also doesn't handle any custom properties defined on products, variations or categories. There are some comments in the code to show how size, color and description, as defined in Quicksilver, could be handled.
+
+### Specialized taxes per product
+
+Ka-ching is capable of handling 
 
 ### Bundles and packages
 
@@ -84,5 +117,8 @@ In the Quicksilver solution go to the EPiServerLog.config file in the EPiServer.
 ## Ideas for future versions
 
 - Handling of custom properties on products and variations.
+- Handling of tax data per product.
+- Bundles and packages.
 - Synchronization of stock values to Ka-ching.
 - Synchronization of campaigns.
+- Synchronization of markets and default taxes
