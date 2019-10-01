@@ -58,6 +58,7 @@ This solution assumes the following:
 - Products only have variations as children.
 - Products only have categories as parents.
 - Variations only have products as parents.
+- Categories only have categories as parents.
 - Only 1 catalog.
 
 We might be able to remove some or all of those in future versions.
