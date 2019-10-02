@@ -5,16 +5,36 @@
 # Episerver Add-On
 
 ![Admin Plug-In Screenshot](https://raw.githubusercontent.com/ka-ching-as/ka-ching-episerver-app/master/Images/EpiserverKachingPlugIn.png)
-
+ 
 ## Concept
 
-This Episerver Add-On aims at making it easy to use the awesome capabilities and information in Episerver Commerce as a sales tool in retail stores by integrating with Ka-ching.
+This Episerver add-on aims at making it easy to use the awesome capabilities and information in Episerver Commerce as a sales tool in retail stores by integrating with Ka-ching.
+
+When the add-on is installed it listens for commerce data change events and if configured with import URLs it will send the updated data to Ka-ching. See below for details of what data and what events are handled. To configure the add-on go to the CMS admin page and find "Ka-ching Integration" in the Tools section. See below for more details.
 
 The current implementation is developed and tested using the Episerver reference commerce site [Quicksilver](https://github.com/episerver/Quicksilver). In it's current state it this add-on is mostly a reference point and accelerator for further implementation and customization in real case scenarios.
 
 All development on this add-on is open source under the MIT license. Contributions are very welcome.
 
 Our apps are not in the iOS App Store yet, so [contact us](https://ka-ching.dk/about-us/) to get hold of the install links.
+
+## Configuring the add-on
+
+This section assumes you have a Ka-ching account. Get in touch using the contact details found [here](https://ka-ching.dk/about-us/) if you need an account.
+
+Go to [Ka-ching Backoffice](https://backoffice.ka-ching.dk/login) to setup the import integrations needed for this add-on to work.
+
+After logging in, click the user icon in the top bar and click the "Advanced" option to show the "Advanced" menu in the left of the screen.
+
+Click the "Import integrations" option and create the following integrations:
+
+* Products import
+* Tags import
+* Folders import
+
+Copy and paste each of the URLs for those endpoints to their appropriate input fields in the Episerver add-on. Once those URLs are saved it will be possible to do an initial full export of products and categories from Episerver to Ka-ching. 
+
+Next step is to configure matching master data in Ka-ching.
 
 ## Manual setup in Ka-ching
 
