@@ -190,13 +190,13 @@ namespace KachingPlugIn.Services
         {
             var result = new List<string>();
             var link = product.ParentLink;
-            try
+
+            if (_contentLoader.TryGet(link, out NodeContent category))
             {
-                var category = _contentLoader.Get<NodeContent>(link);
                 result.Add(category.Code.KachingCompatibleKey());
                 result.AddRange(ParentTagsForCategory(category));
             }
-            catch
+            else
             {
                 _log.Warning("Parent link is not linking to a category as expected");
             }
@@ -208,19 +208,14 @@ namespace KachingPlugIn.Services
         {
             var result = new List<string>();
             var link = category.ParentLink;
-            do
+
+            IEnumerable<NodeContent> ancestors = _contentLoader
+                .GetAncestors(category.ContentLink)
+                .OfType<NodeContent>();
+            foreach (var ancestor in ancestors)
             {
-                try
-                {
-                    var parent = _contentLoader.Get<NodeContent>(link);
-                    result.Add(parent.Code.KachingCompatibleKey());
-                    link = parent.ParentLink;
-                }
-                catch
-                {
-                    link = null;
-                }
-            } while (link != null);
+                result.Add(ancestor.Code.KachingCompatibleKey());
+            }
 
             return result;
         }
