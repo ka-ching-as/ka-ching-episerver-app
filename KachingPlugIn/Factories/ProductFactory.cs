@@ -215,7 +215,7 @@ namespace KachingPlugIn.Factories
             var kachingMarkets = new Dictionary<string, bool>();
             foreach (var market in markets)
             {
-                var marketKey = market.MarketName.KachingCompatibleKey();
+                var marketKey = market.MarketId.Value.KachingCompatibleKey();
                 kachingMarkets[marketKey] = true;
             }
 
@@ -247,9 +247,9 @@ namespace KachingPlugIn.Factories
                     new CatalogKey(code),
                     filter)
                     .FirstOrDefault();
-                if (price != null && price.UnitPrice != null && market.MarketName != null)
+                if (price != null && market.MarketName != null)
                 {
-                    var marketKey = market.MarketName.KachingCompatibleKey();
+                    var marketKey = market.MarketId.Value.KachingCompatibleKey();
                     prices[marketKey] = price.UnitPrice.Amount;
                 }
             }
