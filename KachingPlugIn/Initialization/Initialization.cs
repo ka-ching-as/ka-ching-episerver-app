@@ -11,23 +11,8 @@ namespace KachingPlugIn.Intialization
     [ModuleDependency(typeof(EPiServer.Web.InitializationModule))]
     public class PlugInInitialization : IInitializableHttpModule
     {
-        private string _pluginName = "KachingPlugIn";
-        private bool _initialized;
-
         public void Initialize(InitializationEngine context)
         {
-            if (_initialized)
-            {
-                return;
-            }
-
-            _initialized = true;
-
-            RouteTable.Routes.MapRoute(
-                null,
-                "modules/" + _pluginName + "/Controllers",
-                new { controller = _pluginName, action = "Index" });
-
             var eventHandler = context.Locate.Advanced.GetInstance<CatalogEventHandler>();
             eventHandler.Initialize();
         }

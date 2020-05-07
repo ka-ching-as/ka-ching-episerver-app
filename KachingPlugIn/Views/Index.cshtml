@@ -29,19 +29,19 @@
         {
             <h3>Specify import URLs</h3>
 
-            using (Html.BeginForm("UpdateProductImportUrl", "KachingPlugIn", FormMethod.Post, new { @class = "form-inline" }))
+            using (Html.BeginForm("UpdateProductImportUrl", "KachingPlugIn", new { modulearea = "KachingPlugin" }, FormMethod.Post, new { @class = "form-inline" }))
             {
                 <p>Products import URL</p>
                 @Html.TextBoxFor(m => m.ProductsImportUrl)
                 <button type="submit">Save</button>
             }
-            using (Html.BeginForm("UpdateTagsImportUrl", "KachingPlugIn", FormMethod.Post, new { @class = "form-inline" }))
+            using (Html.BeginForm("UpdateTagsImportUrl", "KachingPlugIn", new { modulearea = "KachingPlugin" }, FormMethod.Post, new { @class = "form-inline" }))
             {
                 <p>Tags import URL</p>
                 @Html.TextBoxFor(m => m.TagsImportUrl)
                 <button type="submit">Save</button>
             }
-            using (Html.BeginForm("UpdateFoldersImportUrl", "KachingPlugIn", FormMethod.Post, new { @class = "form-inline" }))
+            using (Html.BeginForm("UpdateFoldersImportUrl", "KachingPlugIn", new { modulearea = "KachingPlugin" }, FormMethod.Post, new { @class = "form-inline" }))
             {
                 <p>Folders import URL</p>
                 @Html.TextBoxFor(m => m.FoldersImportUrl)
@@ -51,7 +51,7 @@
             <br />
             <hr />
 
-            using (Html.BeginForm("StartFullProductExport", "KachingPlugIn", FormMethod.Post, new { @class = "form-inline" }))
+            using (Html.BeginForm("StartFullProductExport", "KachingPlugIn", new { modulearea = "KachingPlugin" }, FormMethod.Post, new { @class = "form-inline" }))
             {
                 <h3>Perform full product export</h3>
                 if (Model.ProductExportStartButtonDisabled)
@@ -64,7 +64,7 @@
             <br />
             <hr />
 
-            using (Html.BeginForm("StartFullCategoryExport", "KachingPlugIn", FormMethod.Post, new { @class = "form-inline" }))
+            using (Html.BeginForm("StartFullCategoryExport", "KachingPlugIn", new { modulearea = "KachingPlugin" }, FormMethod.Post, new { @class = "form-inline" }))
             {
                 <h3>Perform full category export</h3>
                 if (Model.CategoryExportStartButtonDisabled)

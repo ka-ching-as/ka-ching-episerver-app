@@ -10,7 +10,7 @@ namespace KachingPlugIn.Controllers
 {
     [GuiPlugIn(
         Area = PlugInArea.AdminMenu,
-        Url = "/modules/KachingPlugIn/Controllers",
+        Url = "/Episerver/KachingPlugIn/KachingPlugIn",
         LanguagePath = "/modules/KachingPlugIn/EmbeddedLangFiles",
         DisplayName = "Ka-ching Integration")]
     public class KachingPlugInController : Controller
@@ -48,7 +48,7 @@ namespace KachingPlugIn.Controllers
         {
             var configuration = Configuration.Instance();
             _productExport.StartFullProductExport(configuration.ProductsImportUrl);
-            return RedirectToAction("Index");
+            return RedirectToAction("Index", "KachingPlugIn", new { modulearea = "KachingPlugin" });
         }
 
         [HttpPost]
@@ -57,7 +57,7 @@ namespace KachingPlugIn.Controllers
             _log.Information("StartFullCategoryExport");
             var configuration = Configuration.Instance();
             _categoryExport.StartFullCategoryExport(configuration.TagsImportUrl, configuration.FoldersImportUrl);
-            return RedirectToAction("Index");
+            return RedirectToAction("Index", "KachingPlugIn", new { modulearea = "KachingPlugin" });
         }
 
         [HttpPost]
@@ -67,8 +67,7 @@ namespace KachingPlugIn.Controllers
             var configuration = Configuration.Instance();
             configuration.ProductsImportUrl = ProductsImportUrl;
             configuration.Save();
-            return RedirectToAction("Index");
-
+            return RedirectToAction("Index", "KachingPlugIn", new { modulearea = "KachingPlugin" });
         }
 
         [HttpPost]
@@ -78,7 +77,7 @@ namespace KachingPlugIn.Controllers
             var configuration = Configuration.Instance();
             configuration.TagsImportUrl = TagsImportUrl;
             configuration.Save();
-            return RedirectToAction("Index");
+            return RedirectToAction("Index", "KachingPlugIn", new { modulearea = "KachingPlugin" });
         }
 
         [HttpPost]
@@ -88,7 +87,7 @@ namespace KachingPlugIn.Controllers
             var configuration = Configuration.Instance();
             configuration.FoldersImportUrl = FoldersImportUrl;
             configuration.Save();
-            return RedirectToAction("Index");
+            return RedirectToAction("Index", "KachingPlugIn", new { modulearea = "KachingPlugin" });
         }
 
         [HttpGet]
