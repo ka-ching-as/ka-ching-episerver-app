@@ -13,8 +13,8 @@ namespace KachingPlugIn.Models
 
         public string ImageUrl { get; set; }
 
-        public Variant[] Variants { get; set; }
-        public List<Dimension> Dimensions { get; set; }
+        public ICollection<Variant> Variants { get; set; }
+        public ICollection<Dimension> Dimensions { get; set; }
 
         public Dictionary<string, string> Attributes { get; set; }
         public Dictionary<string, bool> Tags { get; set; }
