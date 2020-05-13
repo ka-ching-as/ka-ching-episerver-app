@@ -100,6 +100,16 @@ namespace KachingPlugIn.Factories
 
             //kachingProduct.Dimensions = dimensions;
 
+            CommerceMedia productImage = product.CommerceMediaCollection.FirstOrDefault();
+            if (productImage != null)
+            {
+                string absoluteUrl = _urlResolver.GetUrl(
+                    productImage.AssetLink,
+                    string.Empty,
+                    new UrlResolverArguments { ForceCanonical = true });
+                kachingProduct.ImageUrl = absoluteUrl;
+            }
+
             var kachingVariants = new List<Variant>();
 
             var variantLinks = product.GetVariants();
