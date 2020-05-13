@@ -62,7 +62,7 @@
     <None Include=".nuget\NuGet.targets" />
     <None Include="app.config" />
     <None Include="KachingPlugIn.nuspec" />
-    <None Include="KachingPlugIn\Views\Index.cshtml" />
+    <None Include="KachingPlugIn\Views\KachingPlugIn\Index.cshtml" />
     <None Include="KachingPlugIn\Views\Progress.cshtml" />
     <None Include="module.config" />
     <None Include="Packager\Main.targets" />
