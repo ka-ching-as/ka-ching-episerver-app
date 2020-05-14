@@ -67,7 +67,7 @@ namespace KachingPlugIn.Controllers
             var configuration = Configuration.Instance();
             configuration.ProductsImportUrl = ProductsImportUrl;
             configuration.Save();
-            return RedirectToAction("Index", "KachingPlugIn");
+            return RedirectToAction("Index");
         }
 
         [HttpPost]
