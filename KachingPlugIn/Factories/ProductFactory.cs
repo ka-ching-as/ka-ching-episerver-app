@@ -158,14 +158,14 @@ namespace KachingPlugIn.Factories
                 /* Find an image */
                 /* ---------------------------- */
 
-                CommerceMedia variantImage = product.CommerceMediaCollection.FirstOrDefault();
-                if (productImage != null)
+                CommerceMedia variantImage = variation.CommerceMediaCollection.FirstOrDefault();
+                if (variantImage != null)
                 {
                     string absoluteUrl = _urlResolver.GetUrl(
                         variantImage.AssetLink,
                         string.Empty,
                         new UrlResolverArguments { ForceCanonical = true });
-                    kachingProduct.ImageUrl = absoluteUrl;
+                    kachingVariant.ImageUrl = absoluteUrl;
                 }
 
                 // Make sure umbrella product is assigned an image url
