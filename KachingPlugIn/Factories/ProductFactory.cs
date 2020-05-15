@@ -1,5 +1,4 @@
 ﻿using EPiServer.Commerce.Catalog.ContentTypes;
-using EPiServer.Core;
 using EPiServer.Logging;
 using KachingPlugIn.Helpers;
 using KachingPlugIn.Models;
@@ -12,6 +11,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using EPiServer;
+using EPiServer.Commerce.SpecializedProperties;
 
 namespace KachingPlugIn.Factories
 {
@@ -100,6 +100,16 @@ namespace KachingPlugIn.Factories
 
             //kachingProduct.Dimensions = dimensions;
 
+            CommerceMedia productImage = product.CommerceMediaCollection.FirstOrDefault();
+            if (productImage != null)
+            {
+                string absoluteUrl = _urlResolver.GetUrl(
+                    productImage.AssetLink,
+                    string.Empty,
+                    new UrlResolverArguments { ForceCanonical = true });
+                kachingProduct.ImageUrl = absoluteUrl;
+            }
+
             var kachingVariants = new List<Variant>();
 
             var variantLinks = product.GetVariants();
@@ -148,12 +158,14 @@ namespace KachingPlugIn.Factories
                 /* Find an image */
                 /* ---------------------------- */
 
-                var media = variation.CommerceMediaCollection.FirstOrDefault();
-                if (media != null)
+                CommerceMedia variantImage = variation.CommerceMediaCollection.FirstOrDefault();
+                if (variantImage != null)
                 {
-                    var content = _contentLoader.Get<IContentMedia>(media.AssetLink);
-                    var relativeUrl = _urlResolver.GetUrl(content);
-                    kachingVariant.ImageUrl = new UrlBuilder(relativeUrl).ToString();
+                    string absoluteUrl = _urlResolver.GetUrl(
+                        variantImage.AssetLink,
+                        string.Empty,
+                        new UrlResolverArguments { ForceCanonical = true });
+                    kachingVariant.ImageUrl = absoluteUrl;
                 }
 
                 // Make sure umbrella product is assigned an image url
