@@ -4,13 +4,14 @@ using System;
 
 namespace KachingPlugIn.Models
 {
+    [EPiServerDataStore(AutomaticallyCreateStore = true, AutomaticallyRemapStore = true, StoreName = "Kaching.AddOn.Configuration")]
     public class Configuration : IDynamicData
     {
-        private static Identity ID = Identity.NewIdentity(new Guid("9f070fad-4c4c-49c6-9443-510ab091500a"));
+        private static readonly Identity ID = Identity.NewIdentity(new Guid("9f070fad-4c4c-49c6-9443-510ab091500a"));
 
         private static DynamicDataStore Store()
         {
-            return DynamicDataStoreFactory.Instance.CreateStore("Kaching.AddOn.Configuration", typeof(Configuration));
+            return DynamicDataStoreFactory.Instance.GetStore("Kaching.AddOn.Configuration");
         } 
 
         public static Configuration Instance()
@@ -21,6 +22,7 @@ namespace KachingPlugIn.Models
                 result = new Configuration();
                 result.Save();
             }
+
             return result;
         }
 
@@ -29,6 +31,7 @@ namespace KachingPlugIn.Models
         public string ProductsImportUrl { get; set; }
         public string TagsImportUrl { get; set; }
         public string FoldersImportUrl { get; set; }
+        public bool ExportSingleVariantAsProduct { get; set; }
 
         public Configuration()
         {
@@ -37,7 +40,7 @@ namespace KachingPlugIn.Models
 
         private void Initialize()
         {
-            Id = Configuration.ID;
+            Id = ID;
             ProductsImportUrl = string.Empty;
             TagsImportUrl = string.Empty;
             FoldersImportUrl = string.Empty;
