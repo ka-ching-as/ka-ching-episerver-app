@@ -105,6 +105,16 @@ namespace KachingPlugIn.Controllers
             return PartialView(ViewLocation("Progress"), BuildProgressViewModel());
         }
 
+        protected override void OnAuthorization(AuthorizationContext filterContext)
+        {
+            if (!PrincipalInfo.HasAdminAccess)
+            {
+                throw new UnauthorizedAccessException();
+            }
+
+            base.OnAuthorization(filterContext);
+        }
+
         private ProgressViewModel BuildProgressViewModel()
         {
             var result = new ProgressViewModel();
