@@ -10,13 +10,13 @@ namespace KachingPlugIn.Controllers
 {
     [GuiPlugIn(
         Area = PlugInArea.AdminMenu,
-        Url = "/modules/KachingPlugIn/Controllers",
+        Url = "/Episerver/KachingPlugIn/KachingPlugIn",
         LanguagePath = "/modules/KachingPlugIn/EmbeddedLangFiles",
         DisplayName = "Ka-ching Integration")]
     public class KachingPlugInController : Controller
     {
-        private ProductExportSingleton _productExport;
-        private CategoryExportSingleton _categoryExport;
+        private readonly ProductExportSingleton _productExport;
+        private readonly CategoryExportSingleton _categoryExport;
         private readonly ILogger _log = LogManager.GetLogger(typeof(KachingPlugInController));
 
         public KachingPlugInController(
@@ -40,7 +40,7 @@ namespace KachingPlugIn.Controllers
             viewModel.ProductExportStartButtonDisabled = !configuration.ProductsImportUrl.IsValidProductsImportUrl();
             viewModel.CategoryExportStartButtonDisabled = !configuration.TagsImportUrl.IsValidTagsImportUrl() || !configuration.FoldersImportUrl.IsValidFoldersImportUrl();
 
-            return PartialView(ViewLocation("Index"), viewModel);
+            return View("Index", viewModel);
         }
 
         [HttpPost]
@@ -48,7 +48,7 @@ namespace KachingPlugIn.Controllers
         {
             var configuration = Configuration.Instance();
             _productExport.StartFullProductExport(configuration.ProductsImportUrl);
-            return RedirectToAction("Index");
+            return RedirectToAction("Index", "KachingPlugIn");
         }
 
         [HttpPost]
@@ -57,37 +57,37 @@ namespace KachingPlugIn.Controllers
             _log.Information("StartFullCategoryExport");
             var configuration = Configuration.Instance();
             _categoryExport.StartFullCategoryExport(configuration.TagsImportUrl, configuration.FoldersImportUrl);
-            return RedirectToAction("Index");
+            return RedirectToAction("Index", "KachingPlugIn");
         }
 
         [HttpPost]
-        public ActionResult UpdateProductImportUrl(string ProductsImportUrl)
+        public ActionResult UpdateProductImportUrl(string productsImportUrl)
         {
-            _log.Information("UpdateProductImportUrl: " + ProductsImportUrl);
+            _log.Information("UpdateProductImportUrl: " + productsImportUrl);
             var configuration = Configuration.Instance();
-            configuration.ProductsImportUrl = ProductsImportUrl;
+            configuration.ProductsImportUrl = productsImportUrl;
             configuration.Save();
-            return RedirectToAction("Index");
+            return RedirectToAction("Index", "KachingPlugIn");
         }
 
         [HttpPost]
-        public ActionResult UpdateTagsImportUrl(string TagsImportUrl)
+        public ActionResult UpdateTagsImportUrl(string tagsImportUrl)
         {
-            _log.Information("UpdateTagsImportUrl: " + TagsImportUrl);
+            _log.Information("UpdateTagsImportUrl: " + tagsImportUrl);
             var configuration = Configuration.Instance();
-            configuration.TagsImportUrl = TagsImportUrl;
+            configuration.TagsImportUrl = tagsImportUrl;
             configuration.Save();
-            return RedirectToAction("Index");
+            return RedirectToAction("Index", "KachingPlugIn");
         }
 
         [HttpPost]
-        public ActionResult UpdateFoldersImportUrl(string FoldersImportUrl)
+        public ActionResult UpdateFoldersImportUrl(string foldersImportUrl)
         {
-            _log.Information("UpdateFoldersImportUrl: " + FoldersImportUrl);
+            _log.Information("UpdateFoldersImportUrl: " + foldersImportUrl);
             var configuration = Configuration.Instance();
-            configuration.FoldersImportUrl = FoldersImportUrl;
+            configuration.FoldersImportUrl = foldersImportUrl;
             configuration.Save();
-            return RedirectToAction("Index");
+            return RedirectToAction("Index", "KachingPlugIn");
         }
 
         [HttpGet]

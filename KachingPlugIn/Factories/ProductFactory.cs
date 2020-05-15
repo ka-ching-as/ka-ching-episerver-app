@@ -259,7 +259,7 @@ namespace KachingPlugIn.Factories
                     new CatalogKey(code),
                     filter)
                     .FirstOrDefault();
-                if (price != null && market.MarketName != null)
+                if (price != null && market.MarketId != null)
                 {
                     var marketKey = market.MarketId.Value.KachingCompatibleKey();
                     prices[marketKey] = price.UnitPrice.Amount;
