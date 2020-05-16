@@ -11,7 +11,7 @@ namespace KachingPlugIn.Models
 
         private static DynamicDataStore Store()
         {
-            return DynamicDataStoreFactory.Instance.GetStore("Kaching.AddOn.Configuration");
+            return DynamicDataStoreFactory.Instance.GetStore(typeof(Configuration));
         } 
 
         public static Configuration Instance()
