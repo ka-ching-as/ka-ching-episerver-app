@@ -40,6 +40,7 @@
     <Compile Include="KachingPlugIn\Initialization\Initialization.cs" />
     <Compile Include="KachingPlugIn\Models\Folder.cs" />
     <Compile Include="KachingPlugIn\Models\Configuration.cs" />
+    <Compile Include="KachingPlugIn\Models\MarketPriceConverter.cs" />
     <Compile Include="KachingPlugIn\Models\Product.cs" />
     <Compile Include="KachingPlugIn\Models\Tag.cs" />
     <Compile Include="KachingPlugIn\Models\L10nString.cs" />
