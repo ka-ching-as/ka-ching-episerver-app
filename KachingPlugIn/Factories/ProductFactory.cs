@@ -225,16 +225,27 @@ namespace KachingPlugIn.Factories
         {
             var markets = _marketService.GetAllMarkets();
             var kachingMarkets = new Dictionary<string, bool>();
+
             foreach (var market in markets)
             {
+                if (market.IsEnabled)
+                {
+                    continue;
+                }
+
                 var marketKey = market.MarketId.Value.KachingCompatibleKey();
                 kachingMarkets[marketKey] = true;
             }
 
-            var result = new ProductMetadata();
-            result.Channels = new Dictionary<string, bool>();
-            result.Channels["pos"] = true;
-            result.Markets = kachingMarkets;
+            var result = new ProductMetadata
+            {
+                Markets = kachingMarkets,
+                Channels = new Dictionary<string, bool>(1)
+                {
+                    ["pos"] = true
+                }
+            };
+
             return result;
         }
 
