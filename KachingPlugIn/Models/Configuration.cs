@@ -33,6 +33,8 @@ namespace KachingPlugIn.Models
         public string FoldersImportUrl { get; set; }
         public bool ExportSingleVariantAsProduct { get; set; }
 
+        public FieldMappingConfiguration FieldMappings { get; set; }
+
         public Configuration()
         {
             Initialize();
@@ -44,6 +46,7 @@ namespace KachingPlugIn.Models
             ProductsImportUrl = string.Empty;
             TagsImportUrl = string.Empty;
             FoldersImportUrl = string.Empty;
+            FieldMappings = new FieldMappingConfiguration();
         }
 
         public void Save()
