@@ -42,6 +42,7 @@
     <Compile Include="KachingPlugIn\Models\DimensionValue.cs" />
     <Compile Include="KachingPlugIn\Models\Folder.cs" />
     <Compile Include="KachingPlugIn\Models\Configuration.cs" />
+    <Compile Include="KachingPlugIn\Models\MarketPriceConverter.cs" />
     <Compile Include="KachingPlugIn\Models\Product.cs" />
     <Compile Include="KachingPlugIn\Models\Tag.cs" />
     <Compile Include="KachingPlugIn\Models\L10nString.cs" />
@@ -201,8 +202,8 @@
     <Reference Include="Microsoft.Web.Infrastructure, Version=1.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <HintPath>packages\Microsoft.Web.Infrastructure.1.0.0.0\lib\net40\Microsoft.Web.Infrastructure.dll</HintPath>
     </Reference>
-    <Reference Include="Newtonsoft.Json, Version=9.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
-      <HintPath>packages\Newtonsoft.Json.9.0.1\lib\net45\Newtonsoft.Json.dll</HintPath>
+    <Reference Include="Newtonsoft.Json, Version=11.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <HintPath>packages\Newtonsoft.Json.11.0.1\lib\net45\Newtonsoft.Json.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.ComponentModel.Annotations, Version=4.2.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
