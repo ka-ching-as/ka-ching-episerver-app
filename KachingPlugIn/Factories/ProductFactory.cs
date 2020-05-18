@@ -228,7 +228,7 @@ namespace KachingPlugIn.Factories
 
             foreach (var market in markets)
             {
-                if (market.IsEnabled)
+                if (!market.IsEnabled)
                 {
                     continue;
                 }
