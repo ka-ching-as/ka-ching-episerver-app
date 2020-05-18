@@ -1,18 +1,17 @@
-﻿using EPiServer.Commerce.Catalog.ContentTypes;
+﻿using EPiServer;
+using EPiServer.Commerce.Catalog.ContentTypes;
+using EPiServer.Commerce.Catalog.Linking;
+using EPiServer.Commerce.SpecializedProperties;
+using EPiServer.Core;
+using EPiServer.Web.Routing;
 using KachingPlugIn.Helpers;
 using KachingPlugIn.Models;
-using EPiServer.Web.Routing;
 using Mediachase.Commerce.Catalog;
 using Mediachase.Commerce.Markets;
 using Mediachase.Commerce.Pricing;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using EPiServer;
-using EPiServer.Commerce.Catalog.Linking;
-using EPiServer.Commerce.SpecializedProperties;
-using EPiServer.Core;
-using Mediachase.Commerce;
 
 namespace KachingPlugIn.Factories
 {
@@ -41,18 +40,28 @@ namespace KachingPlugIn.Factories
             _l10nStringFactory = l10NStringFactory;
         }
 
-        public Product BuildKaChingProduct(ProductContent product, ICollection<string> tags, string skipVariantCode)
+        public Product BuildKaChingProduct(
+            ProductContent product,
+            ICollection<string> tags,
+            Configuration configuration,
+            string skipVariantCode)
         {
             var kachingProduct = new Product();
 
             kachingProduct.Id = product.Code;
             kachingProduct.Name = _l10nStringFactory.LocalizedProductName(product);
+            kachingProduct.Barcode = GetPropertyStringValue(product, configuration.FieldMappings.BarcodeField);
 
-            /* ---------------------------- */
-            /* Barcode is just a string, but needs to fit the barcodes on the products in the store.
-             * Don't use this one if your product has variants - see below for assignment on variant */
-            /* ---------------------------- */
-            // kachingProduct.Barcode = product.Barcode;
+            foreach (var kvp in configuration.FieldMappings.AttributeFields)
+            {
+                object value = GetAttributeValue(product, kvp.Key);
+                if (value == null)
+                {
+                    continue;
+                }
+
+                kachingProduct.Attributes[kvp.Value] = value;
+            }
 
             /* ---------------------------- */
             /* Example of dimension and dimension value construction from the Quicksilver site. */
@@ -107,16 +116,27 @@ namespace KachingPlugIn.Factories
                 .ToArray();
 
             if (variants.Count == 1 &&
-                Configuration.Instance().ExportSingleVariantAsProduct)
+                configuration.ExportSingleVariantAsProduct)
             {
                 // If the product has only one variant and ExportSingleVariantAsProduct is configured to true,
                 // then put all variant properties on the product instead.
                 var variant = variants.First();
 
                 kachingProduct.Id = variant.Code;
-                //kachingProduct.Barcode = variant.Barcode;
+                kachingProduct.Barcode = GetPropertyStringValue(variant, configuration.FieldMappings.BarcodeField);
                 kachingProduct.Name = _l10nStringFactory.LocalizedVariantName(variant);
                 kachingProduct.RetailPrice = MarketPriceForCode(variant.Code);
+
+                foreach (var kvp in configuration.FieldMappings.AttributeFields)
+                {
+                    object value = GetAttributeValue(variant, kvp.Key);
+                    if (value == null)
+                    {
+                        continue;
+                    }
+
+                    kachingProduct.Attributes[kvp.Value] = value;
+                }
 
                 if (kachingProduct.ImageUrl == null)
                 {
@@ -145,7 +165,7 @@ namespace KachingPlugIn.Factories
 
                     var kachingVariant = new Variant();
                     kachingVariant.Id = variant.Code;
-                    //kachingVariant.Barcode = variant.Barcode;
+                    kachingVariant.Barcode = GetPropertyStringValue(variant, configuration.FieldMappings.BarcodeField);
 
                     var variantName = _l10nStringFactory.LocalizedVariantName(variant);
                     if (!variantName.Equals(kachingProduct.Name))
@@ -154,6 +174,17 @@ namespace KachingPlugIn.Factories
                     }
 
                     kachingVariant.RetailPrice = MarketPriceForCode(variant.Code);
+
+                    foreach (var kvp in configuration.FieldMappings.AttributeFields)
+                    {
+                        object value = GetAttributeValue(variant, kvp.Key);
+                        if (value == null)
+                        {
+                            continue;
+                        }
+
+                        kachingVariant.Attributes[kvp.Value] = value;
+                    }
 
                     CommerceMedia variantImage = variant.CommerceMediaCollection.FirstOrDefault();
                     if (variantImage != null)
@@ -227,6 +258,50 @@ namespace KachingPlugIn.Factories
             result.Channels["pos"] = true;
             result.Markets = kachingMarkets;
             return result;
+        }
+
+        private object GetAttributeValue(CatalogContentBase content, string propertyName)
+        {
+            if (string.IsNullOrWhiteSpace(propertyName))
+            {
+                return null;
+            }
+
+            PropertyData data = content.Property[propertyName];
+            if (data == null || data.IsNull)
+            {
+                return null;
+            }
+
+            switch (data.Value)
+            {
+                case int numberData:
+                    return numberData;
+                case bool booleanData:
+                    return booleanData ? "true" : "false";
+                case string stringData:
+                    return new AttributeTextValue(stringData);
+                default:
+                    return null;
+            }
+        }
+
+        private string GetPropertyStringValue(ContentData content, string propertyName)
+        {
+            if (string.IsNullOrWhiteSpace(propertyName))
+            {
+                return null;
+            }
+
+            PropertyData data = content.Property[propertyName];
+            if (data == null || data.IsNull)
+            {
+                return null;
+            }
+
+            return data.Value is string stringValue
+                ? stringValue
+                : null;
         }
 
         private MarketPrice MarketPriceForCode(string code)

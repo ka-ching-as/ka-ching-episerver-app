@@ -38,6 +38,7 @@
     <Compile Include="KachingPlugIn\Helpers\APIFacade.cs" />
     <Compile Include="KachingPlugIn\Helpers\StringExtensions.cs" />
     <Compile Include="KachingPlugIn\Initialization\Initialization.cs" />
+    <Compile Include="KachingPlugIn\Models\AttributeTextValue.cs" />
     <Compile Include="KachingPlugIn\Models\Dimension.cs" />
     <Compile Include="KachingPlugIn\Models\DimensionValue.cs" />
     <Compile Include="KachingPlugIn\Models\FieldMappingConfiguration.cs" />
