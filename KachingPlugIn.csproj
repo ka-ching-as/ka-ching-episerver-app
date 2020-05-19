@@ -67,6 +67,7 @@
     <None Include="KachingPlugIn.nuspec" />
     <Content Include="KachingPlugIn\Views\KachingPlugIn\Index.cshtml" />
     <Content Include="KachingPlugIn\Views\Progress.cshtml" />
+    <None Include="KachingPlugIn\Views\web.config" />
     <None Include="module.config" />
     <None Include="packages.config" />
     <None Include="web.config.install.xdt">
