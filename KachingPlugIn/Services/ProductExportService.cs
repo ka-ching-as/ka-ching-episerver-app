@@ -11,6 +11,7 @@ using System.Collections.Generic;
 using System.Linq; 
 using System.Net;
 using System.Threading.Tasks;
+using KachingPlugIn.Configuration;
 
 namespace KachingPlugIn.Services
 {
@@ -100,7 +101,7 @@ namespace KachingPlugIn.Services
 
         public void ExportProduct(ProductContent product, string deletedVariantCode, string url)
         {
-            var configuration = Configuration.Instance();
+            var configuration = KachingConfiguration.Instance;
             _log.Information("ExportProduct: " + product.Code);
 
             // Bail if not published
@@ -152,7 +153,7 @@ namespace KachingPlugIn.Services
 
         private IList<Product> BuildKachingProducts(IEnumerable<NodeContent> nodes, IList<string> tags)
         {
-            var configuration = Configuration.Instance();
+            var configuration = KachingConfiguration.Instance;
             var kachingProducts = new List<Product>();
 
             foreach (var node in nodes)

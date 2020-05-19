@@ -4,6 +4,7 @@ using EPiServer.Commerce.Catalog.Linking;
 using EPiServer.Commerce.SpecializedProperties;
 using EPiServer.Core;
 using EPiServer.Web.Routing;
+using KachingPlugIn.Configuration;
 using KachingPlugIn.Helpers;
 using KachingPlugIn.Models;
 using Mediachase.Commerce.Catalog;
@@ -43,24 +44,24 @@ namespace KachingPlugIn.Factories
         public Product BuildKaChingProduct(
             ProductContent product,
             ICollection<string> tags,
-            Configuration configuration,
+            KachingConfiguration configuration,
             string skipVariantCode)
         {
             var kachingProduct = new Product();
 
             kachingProduct.Id = product.Code;
             kachingProduct.Name = _l10nStringFactory.LocalizedProductName(product);
-            kachingProduct.Barcode = GetPropertyStringValue(product, configuration.FieldMappings.BarcodeField);
+            kachingProduct.Barcode = GetPropertyStringValue(product, configuration.SystemMappings.BarcodeMetaField);
 
-            foreach (var kvp in configuration.FieldMappings.AttributeFields)
+            foreach (var mapping in configuration.AttributeMappings.Cast<AttributeMappingElement>())
             {
-                object value = GetAttributeValue(product, kvp.Key);
+                object value = GetAttributeValue(product, mapping.MetaField);
                 if (value == null)
                 {
                     continue;
                 }
 
-                kachingProduct.Attributes[kvp.Value] = value;
+                kachingProduct.Attributes[mapping.AttributeId] = value;
             }
 
             /* ---------------------------- */
@@ -123,19 +124,19 @@ namespace KachingPlugIn.Factories
                 var variant = variants.First();
 
                 kachingProduct.Id = variant.Code;
-                kachingProduct.Barcode = GetPropertyStringValue(variant, configuration.FieldMappings.BarcodeField);
+                kachingProduct.Barcode = GetPropertyStringValue(variant, configuration.SystemMappings.BarcodeMetaField);
                 kachingProduct.Name = _l10nStringFactory.LocalizedVariantName(variant);
                 kachingProduct.RetailPrice = MarketPriceForCode(variant.Code);
 
-                foreach (var kvp in configuration.FieldMappings.AttributeFields)
+                foreach (var mapping in configuration.AttributeMappings.Cast<AttributeMappingElement>())
                 {
-                    object value = GetAttributeValue(variant, kvp.Key);
+                    object value = GetAttributeValue(variant, mapping.MetaField);
                     if (value == null)
                     {
                         continue;
                     }
 
-                    kachingProduct.Attributes[kvp.Value] = value;
+                    kachingProduct.Attributes[mapping.AttributeId] = value;
                 }
 
                 if (kachingProduct.ImageUrl == null)
@@ -165,7 +166,7 @@ namespace KachingPlugIn.Factories
 
                     var kachingVariant = new Variant();
                     kachingVariant.Id = variant.Code;
-                    kachingVariant.Barcode = GetPropertyStringValue(variant, configuration.FieldMappings.BarcodeField);
+                    //kachingVariant.Barcode = GetPropertyStringValue(variant, configuration.FieldMappings.BarcodeField);
 
                     var variantName = _l10nStringFactory.LocalizedVariantName(variant);
                     if (!variantName.Equals(kachingProduct.Name))
@@ -175,15 +176,15 @@ namespace KachingPlugIn.Factories
 
                     kachingVariant.RetailPrice = MarketPriceForCode(variant.Code);
 
-                    foreach (var kvp in configuration.FieldMappings.AttributeFields)
+                    foreach (var mapping in configuration.AttributeMappings.Cast<AttributeMappingElement>())
                     {
-                        object value = GetAttributeValue(variant, kvp.Key);
+                        object value = GetAttributeValue(variant, mapping.MetaField);
                         if (value == null)
                         {
                             continue;
                         }
 
-                        kachingVariant.Attributes[kvp.Value] = value;
+                        kachingVariant.Attributes[mapping.AttributeId] = value;
                     }
 
                     CommerceMedia variantImage = variant.CommerceMediaCollection.FirstOrDefault();

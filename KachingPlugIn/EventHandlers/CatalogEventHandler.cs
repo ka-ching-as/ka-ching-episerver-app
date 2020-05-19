@@ -9,6 +9,7 @@ using Mediachase.Commerce.Catalog;
 using Mediachase.Commerce.Engine.Events;
 using System;
 using System.Linq;
+using KachingPlugIn.Configuration;
 
 namespace KachingPlugIn.EventHandlers
 {
@@ -211,7 +212,7 @@ namespace KachingPlugIn.EventHandlers
             _log.Information("HandleProductChange: " + product.Code, " isDelete: " + isDelete.ToString());
 
             // Make sure we have valid import endpoints configured before handling the change
-            var configuration = Configuration.Instance();
+            var configuration = KachingConfiguration.Instance;
             if (!configuration.ProductsImportUrl.IsValidProductsImportUrl())
             {
                 _log.Error("Ka-ching product import url is not valid: " + configuration.ProductsImportUrl);
@@ -248,7 +249,7 @@ namespace KachingPlugIn.EventHandlers
         {
             _log.Information("HandleCategoryChange - type: " + changeType.ToString() + " code: " + node.Code);
             // Make sure we have valid import endpoints configured before handling the change
-            var configuration = Configuration.Instance();
+            var configuration = KachingConfiguration.Instance;
             if (!configuration.TagsImportUrl.IsValidTagsImportUrl() || 
                 !configuration.FoldersImportUrl.IsValidFoldersImportUrl() ||
                 !configuration.ProductsImportUrl.IsValidProductsImportUrl())
