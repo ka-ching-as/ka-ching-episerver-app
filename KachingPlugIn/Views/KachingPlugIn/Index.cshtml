@@ -10,49 +10,54 @@
 <html>
 <head>
     <title>Ka-ching integration</title>
+    <link type="text/css" rel="stylesheet" href="@Paths.ToShellClientResource("ClientResources/epi/themes/legacy/ShellCore.css")" />
+    <link type="text/css" rel="stylesheet" href="@Paths.ToShellClientResource("ClientResources/epi/themes/legacy/ShellCoreLightTheme.css")" />
+    <link type="text/css" rel="stylesheet" href="@Paths.ToResource("CMS", "App_Themes/Default/Styles/system.css")" />
 </head>
 
 <body>
-    <div>
-        <h2>Ka-ching integration</h2>
-
-        <hr />
+    <div class="epi-contentContainer epi-padding">
+        <div class="epi-contentArea">
+            <h1 class="EP-prefix">Ka-ching integration</h1>
+        </div>
 
         @if (Model.ProgressViewModel.Busy)
         {
             <div id="progress">
-                @Html.Partial(Paths.ToResource("KachingPlugIn", "KachingPlugIn/Views/Progress.cshtml"), Model.ProgressViewModel)
+                @Html.Partial(Paths.ToResource("KachingPlugIn", "Views/Progress.cshtml"), Model.ProgressViewModel)
             </div>
         }
         else
         {
-            @using (Html.BeginForm("UpdateConfiguration", "KachingPlugIn", FormMethod.Post))
-            {
-                <fieldset>
-                    <legend>Import settings</legend>
-                </fieldset>
-                <div class="epi-size10">
-                    <div>
-                        @Html.LabelFor(m => m.ExportSingleVariantAsProduct, "Export single variants as product?")
-                        @Html.CheckBoxFor(m => m.ExportSingleVariantAsProduct)
-                    </div>
-                    <div>
-                        @Html.LabelFor(m => m.ProductsImportUrl, "Products import URL")
-                        @Html.TextBoxFor(m => m.ProductsImportUrl)
-                    </div>
-                    <div>
-                        @Html.LabelFor(m => m.FoldersImportUrl, "Folders import URL")
-                        @Html.TextBoxFor(m => m.FoldersImportUrl)
-                    </div>
-                    <div>
-                        @Html.LabelFor(m => m.TagsImportUrl, "Tags import URL")
-                        @Html.TextBoxFor(m => m.TagsImportUrl)
-                    </div>
-                </div>
-                <div class="epi-buttonContainer-small">
-                    <button type="submit">Save</button>
-                </div>
-            }
+            <div class="epi-formArea">
+                @using (Html.BeginForm("UpdateConfiguration", "KachingPlugIn", FormMethod.Post))
+                {
+                    <fieldset>
+                        <legend>Import settings</legend>
+                        <div class="epi-size10">
+                            <div>
+                                @Html.LabelFor(m => m.ExportSingleVariantAsProduct, "Export single variants as product?")
+                                @Html.CheckBoxFor(m => m.ExportSingleVariantAsProduct)
+                            </div>
+                            <div>
+                                @Html.LabelFor(m => m.ProductsImportUrl, "Products import URL")
+                                @Html.TextBoxFor(m => m.ProductsImportUrl)
+                            </div>
+                            <div>
+                                @Html.LabelFor(m => m.FoldersImportUrl, "Folders import URL")
+                                @Html.TextBoxFor(m => m.FoldersImportUrl)
+                            </div>
+                            <div>
+                                @Html.LabelFor(m => m.TagsImportUrl, "Tags import URL")
+                                @Html.TextBoxFor(m => m.TagsImportUrl)
+                            </div>
+                        </div>
+                        <div class="epi-buttonContainer-small">
+                            <button type="submit">Save</button>
+                        </div>
+                    </fieldset>
+                }
+            </div>
 
             <br />
             <hr />
