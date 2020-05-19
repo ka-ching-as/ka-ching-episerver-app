@@ -1,51 +1,22 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using Newtonsoft.Json;
 
 namespace KachingPlugIn.Models
 {
-    public class L10nStringConverter : JsonConverter
-    {
-        public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
-        {
-            L10nString l10n = (L10nString)value;
-            if (l10n.Localized != null)
-            {
-                serializer.Serialize(writer, l10n.Localized);
-            }
-            else
-            {
-                writer.WriteValue(l10n.Unlocalized);
-            }
-        }
-
-        public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
-        {
-            // Only handling serialization for now
-            throw new NotImplementedException();
-        }
-
-        public override bool CanConvert(Type objectType)
-        {
-            return objectType == typeof(L10nString);
-        }
-    }
-
-
     [JsonConverter(typeof(L10nStringConverter))]
     public class L10nString
     {
-        public string Unlocalized { get; set; }
-        public Dictionary<string, string> Localized { get; set; }
+        public string Unlocalized { get; }
+        public Dictionary<string, string> Localized { get; }
 
-        public L10nString(string Value)
+        public L10nString(string value)
         {
-            this.Unlocalized = Value;
+            Unlocalized = value;
         }
 
-        public L10nString(Dictionary<string, string> Value)
+        public L10nString(Dictionary<string, string> value)
         {
-            this.Localized = Value;
+            Localized = value;
         }
 
         public override bool Equals(object obj)

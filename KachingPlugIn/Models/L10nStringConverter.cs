@@ -3,30 +3,31 @@ using Newtonsoft.Json;
 
 namespace KachingPlugIn.Models
 {
-    public class MarketPriceConverter : JsonConverter<MarketPrice>
+    public class L10nStringConverter : JsonConverter<L10nString>
     {
         public override void WriteJson(
             JsonWriter writer,
-            MarketPrice value,
+            L10nString value,
             JsonSerializer serializer)
         {
-            if (value.MarketSpecific != null)
+            if (value.Localized != null)
             {
-                serializer.Serialize(writer, value.MarketSpecific);
+                serializer.Serialize(writer, value.Localized);
             }
             else
             {
-                writer.WriteValue(value.Single);
+                writer.WriteValue(value.Unlocalized);
             }
         }
 
-        public override MarketPrice ReadJson(
+        public override L10nString ReadJson(
             JsonReader reader,
             Type objectType,
-            MarketPrice existingValue,
+            L10nString existingValue,
             bool hasExistingValue,
             JsonSerializer serializer)
         {
+            // Only handling serialization for now
             throw new NotImplementedException();
         }
     }
