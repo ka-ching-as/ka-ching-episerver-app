@@ -91,7 +91,7 @@ namespace KachingPlugIn.Controllers
             }
 
             return PartialView(
-                Paths.ToResource("KachingPlugIn", "KachingPlugIn/Views/Progress.cshtml"),
+                Paths.ToResource("KachingPlugIn", "Views/Progress.cshtml"),
                 BuildProgressViewModel());
         }
 
