@@ -45,12 +45,15 @@
     <Compile Include="KachingPlugIn\Models\Folder.cs" />
     <Compile Include="KachingPlugIn\Models\Configuration.cs" />
     <Compile Include="KachingPlugIn\Models\MarketPriceConverter.cs" />
+    <Compile Include="KachingPlugIn\Models\PriceUnit.cs" />
+    <Compile Include="KachingPlugIn\Models\PriceUnitSelectionAttribute.cs" />
     <Compile Include="KachingPlugIn\Models\Product.cs" />
     <Compile Include="KachingPlugIn\Models\Tag.cs" />
     <Compile Include="KachingPlugIn\Models\L10nString.cs" />
     <Compile Include="KachingPlugIn\Models\MarketPrice.cs" />
     <Compile Include="KachingPlugIn\Models\ProductMetadata.cs" />
     <Compile Include="KachingPlugIn\Models\Variant.cs" />
+    <Compile Include="KachingPlugIn\PriceUnitSelectionFactory.cs" />
     <Compile Include="KachingPlugIn\Services\CategoryExportService.cs" />
     <Compile Include="KachingPlugIn\Services\CategoryExportSingleton.cs" />
     <Compile Include="KachingPlugIn\Services\IExportState.cs" />
