@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <configuration xmlns:xdt="http://schemas.microsoft.com/XML-Document-Transform">
   <configSections>
-    <section name="kaching" type="KachingPlugIn.Configuration.KachingConfiguration, KachingPlugIn" />
+    <section name="kaching" type="KachingPlugIn.Configuration.KachingConfiguration, KachingPlugIn" xdt:Transform="InsertIfMissing" xdt:Locator="Match(name)" />
   </configSections>
 
   <episerver.shell xdt:Transform="InsertIfMissing">
@@ -13,7 +13,7 @@
   <kaching productsImportUrl=""
            foldersImportUrl=""
            tagsImportUrl=""
-           exportSingleVariantAsProduct="false">
+           exportSingleVariantAsProduct="false" xdt:Transform="InsertIfMissing">
     <systemMappings barcodeMetaField=""
                     descriptionMetaField=""/>
     <attributeMappings>

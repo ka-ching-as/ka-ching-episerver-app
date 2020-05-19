@@ -70,12 +70,8 @@
     <Content Include="KachingPlugIn\Views\Progress.cshtml" />
     <None Include="module.config" />
     <None Include="packages.config" />
-    <None Include="web.config.install.xdt">
-      <SubType>Designer</SubType>
-    </None>
-    <None Include="web.config.uninstall.xdt">
-      <SubType>Designer</SubType>
-    </None>
+    <None Include="web.config.install.xdt" />
+      <None Include="web.config.uninstall.xdt" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="AjaxControlToolkit, Version=3.0.30930.28736, Culture=neutral, PublicKeyToken=28f01b0e84b6d53e, processorArchitecture=MSIL">
