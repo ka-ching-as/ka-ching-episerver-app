@@ -12,6 +12,7 @@ using Mediachase.Commerce.Pricing;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Mediachase.Commerce;
 
 namespace KachingPlugIn.Factories
 {
@@ -247,16 +248,27 @@ namespace KachingPlugIn.Factories
         {
             var markets = _marketService.GetAllMarkets();
             var kachingMarkets = new Dictionary<string, bool>();
+
             foreach (var market in markets)
             {
+                if (!market.IsEnabled)
+                {
+                    continue;
+                }
+
                 var marketKey = market.MarketId.Value.KachingCompatibleKey();
                 kachingMarkets[marketKey] = true;
             }
 
-            var result = new ProductMetadata();
-            result.Channels = new Dictionary<string, bool>();
-            result.Channels["pos"] = true;
-            result.Markets = kachingMarkets;
+            var result = new ProductMetadata
+            {
+                Markets = kachingMarkets,
+                Channels = new Dictionary<string, bool>(1)
+                {
+                    ["pos"] = true
+                }
+            };
+
             return result;
         }
 
@@ -306,30 +318,34 @@ namespace KachingPlugIn.Factories
 
         private MarketPrice MarketPriceForCode(string code)
         {
-            /* ---------------------------- */
-            /* Find prices for all markets  */
-            /* ---------------------------- */
-
             var markets = _marketService.GetAllMarkets();
             var prices = new Dictionary<string, decimal>();
+
+            ICollection<IPriceValue> allPriceValues = _priceService
+                .GetPrices(
+                    MarketId.Empty,
+                    DateTime.UtcNow,
+                    new CatalogKey(code),
+                    new PriceFilter())
+                .ToArray();
+
             foreach (var market in markets)
             {
-                var filter = new PriceFilter
+                if (!market.IsEnabled)
                 {
-                    Currencies = new[] { market.DefaultCurrency }
-                };
-
-                var price = _priceService.GetPrices(
-                    market.MarketId,
-                    DateTime.Now,
-                    new CatalogKey(code),
-                    filter)
-                    .FirstOrDefault();
-                if (price != null && market.MarketId != null)
-                {
-                    var marketKey = market.MarketId.Value.KachingCompatibleKey();
-                    prices[marketKey] = price.UnitPrice.Amount;
+                    continue;
                 }
+
+                var priceValue = allPriceValues.FirstOrDefault(pv =>
+                    pv.MarketId == market.MarketId &&
+                    pv.UnitPrice.Currency == market.DefaultCurrency);
+                if (priceValue == null)
+                {
+                    continue;
+                }
+
+                var marketKey = market.MarketId.Value.KachingCompatibleKey();
+                prices[marketKey] = priceValue.UnitPrice.Amount;
             }
 
             return prices.Count == 0
