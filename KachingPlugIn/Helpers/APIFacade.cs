@@ -20,6 +20,7 @@ namespace KachingPlugIn.Helpers
             request.Method = "DELETE";
 
             HttpWebResponse response = request.GetResponse() as HttpWebResponse;
+
             return response.StatusCode;
         }
 
@@ -30,27 +31,21 @@ namespace KachingPlugIn.Helpers
             request.Method = "POST";
             request.ContentType = "application/json";
 
-            Stream dataStream = request.GetRequestStream();
-
-            DefaultContractResolver contractResolver = new DefaultContractResolver
+            using (Stream dataStream = request.GetRequestStream())
+            using (StreamWriter streamWriter = new StreamWriter(dataStream))
             {
-                NamingStrategy = new SnakeCaseNamingStrategy()
-            };
+                JsonSerializer serializer = new JsonSerializer();
+                serializer.ContractResolver = new DefaultContractResolver
+                {
+                    NamingStrategy = new SnakeCaseNamingStrategy()
+                };
+                serializer.NullValueHandling = NullValueHandling.Ignore;
 
-            string json = JsonConvert.SerializeObject(model, new JsonSerializerSettings
-            {
-                ContractResolver = contractResolver,
-                Formatting = Formatting.Indented,
-                NullValueHandling = NullValueHandling.Ignore
-            });
-
-            _log.Information(json);
-
-            byte[] byteArray = System.Text.Encoding.UTF8.GetBytes(json);
-            dataStream.Write(byteArray, 0, byteArray.Length);
-            dataStream.Close();
+                serializer.Serialize(streamWriter, model);
+            }
 
             HttpWebResponse response = request.GetResponse() as HttpWebResponse;
+
             return response.StatusCode;
         }
     }
