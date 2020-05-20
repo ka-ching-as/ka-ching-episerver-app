@@ -15,6 +15,7 @@ namespace KachingPlugIn.Models
 
         public ICollection<Variant> Variants { get; set; }
         public ICollection<Dimension> Dimensions { get; set; }
+        public UnitPricing UnitPricing { get; set; }
 
         public IDictionary<string, object> Attributes { get; } = new Dictionary<string, object>(0);
         public IDictionary<string, bool> Tags { get; set; }
