@@ -1,14 +1,13 @@
-﻿using System;
-using EPiServer.Logging;
+﻿using EPiServer.Logging;
 using EPiServer.PlugIn;
-using KachingPlugIn.Helpers;
-using KachingPlugIn.Models;
-using KachingPlugIn.Services;
-using KachingPlugIn.ViewModels;
-using System.Web.Mvc;
 using EPiServer.Security;
 using EPiServer.Shell;
 using KachingPlugIn.Configuration;
+using KachingPlugIn.Helpers;
+using KachingPlugIn.Services;
+using KachingPlugIn.ViewModels;
+using System;
+using System.Web.Mvc;
 using PlugInArea = EPiServer.PlugIn.PlugInArea;
 
 namespace KachingPlugIn.Controllers
@@ -38,10 +37,6 @@ namespace KachingPlugIn.Controllers
 
             var viewModel = new PlugInViewModel();
             viewModel.ProgressViewModel = BuildProgressViewModel();
-            viewModel.ExportSingleVariantAsProduct = configuration.ExportSingleVariantAsProduct;
-            viewModel.ProductsImportUrl = configuration.ProductsImportUrl;
-            viewModel.TagsImportUrl = configuration.TagsImportUrl;
-            viewModel.FoldersImportUrl = configuration.FoldersImportUrl;
             viewModel.ProductExportStartButtonDisabled = !configuration.ProductsImportUrl.IsValidProductsImportUrl();
             viewModel.CategoryExportStartButtonDisabled = !configuration.TagsImportUrl.IsValidTagsImportUrl() ||
                                                           !configuration.FoldersImportUrl.IsValidFoldersImportUrl();
@@ -66,19 +61,6 @@ namespace KachingPlugIn.Controllers
             return RedirectToAction("Index", "KachingPlugIn");
         }
 
-        //[HttpPost]
-        //public ActionResult UpdateConfiguration(PlugInViewModel viewModel)
-        //{
-        //    var configuration = Configuration.Instance();
-        //    configuration.ExportSingleVariantAsProduct = viewModel.ExportSingleVariantAsProduct;
-        //    configuration.FoldersImportUrl = viewModel.FoldersImportUrl;
-        //    configuration.ProductsImportUrl = viewModel.ProductsImportUrl;
-        //    configuration.TagsImportUrl = viewModel.TagsImportUrl;
-        //    configuration.Save();
-
-        //    return RedirectToAction("Index", "KachingPlugIn");
-        //}
-
         [HttpGet]
         public ActionResult Poll()
         {
@@ -92,7 +74,7 @@ namespace KachingPlugIn.Controllers
             }
 
             return PartialView(
-                Paths.ToResource("KachingPlugIn", "KachingPlugIn/Views/Progress.cshtml"),
+                Paths.ToResource("KachingPlugIn", "Views/Progress.cshtml"),
                 BuildProgressViewModel());
         }
 
