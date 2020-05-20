@@ -13,12 +13,14 @@ using Mediachase.Commerce.Pricing;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using EPiServer.Logging;
 using Mediachase.Commerce;
 
 namespace KachingPlugIn.Factories
 {
     public class ProductFactory
     {
+        private static readonly ILogger Logger = LogManager.GetLogger(typeof(ProductFactory));
         private readonly IContentLoader _contentLoader;
         private readonly IMarketService _marketService;
         private readonly IUrlResolver _urlResolver;
@@ -273,7 +275,7 @@ namespace KachingPlugIn.Factories
             return result;
         }
 
-        private object GetAttributeValue(CatalogContentBase content, string propertyName)
+        private object GetAttributeValue(IContentData content, string propertyName)
         {
             if (string.IsNullOrWhiteSpace(propertyName))
             {
@@ -286,20 +288,26 @@ namespace KachingPlugIn.Factories
                 return null;
             }
 
-            switch (data.Value)
+            switch (data.Type)
             {
-                case int numberData:
-                    return numberData;
-                case bool booleanData:
-                    return booleanData ? "true" : "false";
-                case string stringData:
-                    return new AttributeTextValue(stringData);
+                case PropertyDataType.Number:
+                    return (int)data.Value;
+                case PropertyDataType.Boolean:
+                    return (bool)data.Value ? "true" : "false";
+                case PropertyDataType.String:
+                case PropertyDataType.LongString:
+                    // TODO: Support culture-specific strings.
+                    return new AttributeTextValue((string)data.Value);
                 default:
+                    Logger.Warning(
+                        "Mapped property ('{0}') has unsupported property type ({1}). Skipping.",
+                        propertyName,
+                        data.Type);
                     return null;
             }
         }
 
-        private string GetPropertyStringValue(ContentData content, string propertyName)
+        private string GetPropertyStringValue(IContentData content, string propertyName)
         {
             if (string.IsNullOrWhiteSpace(propertyName))
             {
