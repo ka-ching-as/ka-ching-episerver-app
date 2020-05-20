@@ -1,9 +1,7 @@
 ﻿using EPiServer.Commerce.Catalog.ContentTypes;
-using EPiServer.Logging;
 using KachingPlugIn.Helpers;
 using KachingPlugIn.Models;
 using EPiServer.Web.Routing;
-using Mediachase.Commerce;
 using Mediachase.Commerce.Catalog;
 using Mediachase.Commerce.Markets;
 using Mediachase.Commerce.Pricing;
@@ -11,7 +9,10 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using EPiServer;
+using EPiServer.Commerce.Catalog.Linking;
 using EPiServer.Commerce.SpecializedProperties;
+using EPiServer.Core;
+using Mediachase.Commerce;
 
 namespace KachingPlugIn.Factories
 {
@@ -21,45 +22,31 @@ namespace KachingPlugIn.Factories
         private readonly IMarketService _marketService;
         private readonly IUrlResolver _urlResolver;
         private readonly IPriceService _priceService;
+        private readonly IRelationRepository _relationRepository;
         private readonly L10nStringFactory _l10nStringFactory;
-        private readonly ILogger _log = LogManager.GetLogger(typeof(ProductFactory));
 
         public ProductFactory(
             IContentLoader contentLoader,
             IMarketService marketService,
             IUrlResolver urlResolver,
             IPriceService priceService,
+            IRelationRepository relationRepository,
             L10nStringFactory l10NStringFactory)
         {
             _contentLoader = contentLoader;
             _marketService = marketService;
             _urlResolver = urlResolver;
             _priceService = priceService;
+            _relationRepository = relationRepository;
             _l10nStringFactory = l10NStringFactory;
         }
 
-        public Product BuildKaChingProduct(ProductContent product, IList<string> tags, string skipVariantCode)
+        public Product BuildKaChingProduct(ProductContent product, ICollection<string> tags, string skipVariantCode)
         {
             var kachingProduct = new Product();
 
-            /* ---------------------------- */
-            /* Assign id */
-            /* ---------------------------- */
-
             kachingProduct.Id = product.Code;
-
-            /* ---------------------------- */
-            /* Find name for all localizations */
-            /* ---------------------------- */
-
             kachingProduct.Name = _l10nStringFactory.LocalizedProductName(product);
-
-            /* ---------------------------- */
-            /* Find prices for product */
-            /* RetailPrice in Ka-ching is including VAT style tax and excluding sales tax style tax */
-            /* ---------------------------- */
-
-            kachingProduct.RetailPrice = MarketPriceForCode(product.Code);
 
             /* ---------------------------- */
             /* Barcode is just a string, but needs to fit the barcodes on the products in the store.
@@ -110,79 +97,83 @@ namespace KachingPlugIn.Factories
                 kachingProduct.ImageUrl = absoluteUrl;
             }
 
-            var kachingVariants = new List<Variant>();
+            IEnumerable<ContentReference> variantRefs = _relationRepository
+                .GetChildren<ProductVariation>(product.ContentLink)
+                .Select(r => r.Child);
 
-            var variantLinks = product.GetVariants();
-            var variants = variantLinks.Select(x => _contentLoader.Get<VariationContent>(x));
-            foreach (var variation in variants)
+            ICollection<VariationContent> variants = _contentLoader
+                .GetItems(variantRefs, LanguageSelector.MasterLanguage())
+                .OfType<VariationContent>()
+                .ToArray();
+
+            if (variants.Count == 1 &&
+                Configuration.Instance().ExportSingleVariantAsProduct)
             {
-                if (skipVariantCode != null && skipVariantCode == variation.Code)
-                {
-                    continue;
-                }
+                // If the product has only one variant and ExportSingleVariantAsProduct is configured to true,
+                // then put all variant properties on the product instead.
+                var variant = variants.First();
 
-                var kachingVariant = new Variant();
-                kachingVariant.Id = variation.Code;
+                kachingProduct.Id = variant.Code;
+                //kachingProduct.Barcode = variant.Barcode;
+                kachingProduct.Name = _l10nStringFactory.LocalizedVariantName(variant);
+                kachingProduct.RetailPrice = MarketPriceForCode(variant.Code);
 
-                /* ---------------------------- */
-                /* Barcode is just a string, but needs to fit the barcodes on the products in the store. */
-                /* ---------------------------- */
-                // kachingVariant.Barcode = variant.Barcode;
-
-                /* ---------------------------- */
-                /* Assign localized variant name if it's different than product name */
-                /* ---------------------------- */
-
-                var variantName = _l10nStringFactory.LocalizedVariantName(variation);
-                if (!variantName.Equals(kachingProduct.Name))
-                {
-                    kachingVariant.Name = variantName;
-                }
-
-                /* ---------------------------- */
-                /* Example of dimension and dimension value assignment from the Quicksilver site. */
-                /* ---------------------------- */
-
-                //kachingVariant.DimensionValues = new Dictionary<string, string>();
-                //kachingVariant.DimensionValues[colorDimension.Id] = variant.Color.ToLower().Replace(' ', '_');
-                //kachingVariant.DimensionValues[sizeDimension.Id] = variant.Size.ToLower().Replace(' ', '_');
-
-                /* ---------------------------- */
-                /* Find prices for variant */
-                /* RetailPrice in Ka-ching is including VAT style tax and excluding sales tax style tax */
-                /* ---------------------------- */
-
-                kachingVariant.RetailPrice = MarketPriceForCode(variation.Code);
-
-                /* ---------------------------- */
-                /* Find an image */
-                /* ---------------------------- */
-
-                CommerceMedia variantImage = variation.CommerceMediaCollection.FirstOrDefault();
-                if (variantImage != null)
-                {
-                    string absoluteUrl = _urlResolver.GetUrl(
-                        variantImage.AssetLink,
-                        string.Empty,
-                        new UrlResolverArguments { ForceCanonical = true });
-                    kachingVariant.ImageUrl = absoluteUrl;
-                }
-
-                // Make sure umbrella product is assigned an image url
-                // If references are likely to change without triggering an update in Ka-ching
-                // talk to us about enabling image import where Ka-ching downloads 
-                // and stores the image to avoid dangling references.
                 if (kachingProduct.ImageUrl == null)
                 {
-                    kachingProduct.ImageUrl = kachingVariant.ImageUrl;
+                    CommerceMedia variantImage = variant.CommerceMediaCollection.FirstOrDefault();
+                    if (variantImage != null)
+                    {
+                        string absoluteUrl = _urlResolver.GetUrl(
+                            variantImage.AssetLink,
+                            string.Empty,
+                            new UrlResolverArguments { ForceCanonical = true });
+                        kachingProduct.ImageUrl = absoluteUrl;
+                    }
+                }
+            }
+            else if (variants.Count > 0)
+            {
+                var kachingVariants = new List<Variant>(variants.Count);
+
+                foreach (var variant in variants)
+                {
+                    if (skipVariantCode != null &&
+                        skipVariantCode == variant.Code)
+                    {
+                        continue;
+                    }
+
+                    var kachingVariant = new Variant();
+                    kachingVariant.Id = variant.Code;
+                    //kachingVariant.Barcode = variant.Barcode;
+
+                    var variantName = _l10nStringFactory.LocalizedVariantName(variant);
+                    if (!variantName.Equals(kachingProduct.Name))
+                    {
+                        kachingVariant.Name = variantName;
+                    }
+
+                    kachingVariant.RetailPrice = MarketPriceForCode(variant.Code);
+
+                    CommerceMedia variantImage = variant.CommerceMediaCollection.FirstOrDefault();
+                    if (variantImage != null)
+                    {
+                        string absoluteUrl = _urlResolver.GetUrl(
+                            variantImage.AssetLink,
+                            string.Empty,
+                            new UrlResolverArguments { ForceCanonical = true });
+                        kachingVariant.ImageUrl = absoluteUrl;
+                    }
+
+                    if (kachingProduct.ImageUrl == null)
+                    {
+                        kachingProduct.ImageUrl = kachingVariant.ImageUrl;
+                    }
+
+                    kachingVariants.Add(kachingVariant);
                 }
 
-                kachingVariants.Add(kachingVariant);
-            }
-
-            if (kachingVariants.Count > 0)
-            {
-                kachingProduct.Variants = kachingVariants.ToArray();
+                kachingProduct.Variants = kachingVariants;
             }
 
             /* ---------------------------- */
@@ -251,6 +242,10 @@ namespace KachingPlugIn.Factories
 
         private MarketPrice MarketPriceForCode(string code)
         {
+            /* ---------------------------- */
+            /* Find prices for all enabled markets  */
+            /* ---------------------------- */
+
             var markets = _marketService.GetAllMarkets();
             var prices = new Dictionary<string, decimal>();
 

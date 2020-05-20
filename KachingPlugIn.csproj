@@ -38,6 +38,8 @@
     <Compile Include="KachingPlugIn\Helpers\APIFacade.cs" />
     <Compile Include="KachingPlugIn\Helpers\StringExtensions.cs" />
     <Compile Include="KachingPlugIn\Initialization\Initialization.cs" />
+    <Compile Include="KachingPlugIn\Models\Dimension.cs" />
+    <Compile Include="KachingPlugIn\Models\DimensionValue.cs" />
     <Compile Include="KachingPlugIn\Models\Folder.cs" />
     <Compile Include="KachingPlugIn\Models\Configuration.cs" />
     <Compile Include="KachingPlugIn\Models\MarketPriceConverter.cs" />
@@ -46,6 +48,7 @@
     <Compile Include="KachingPlugIn\Models\L10nString.cs" />
     <Compile Include="KachingPlugIn\Models\MarketPrice.cs" />
     <Compile Include="KachingPlugIn\Models\ProductMetadata.cs" />
+    <Compile Include="KachingPlugIn\Models\Variant.cs" />
     <Compile Include="KachingPlugIn\Services\CategoryExportService.cs" />
     <Compile Include="KachingPlugIn\Services\CategoryExportSingleton.cs" />
     <Compile Include="KachingPlugIn\Services\IExportState.cs" />

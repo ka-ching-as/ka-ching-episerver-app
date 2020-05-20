@@ -1,61 +1,73 @@
 ﻿@using System.Web.Mvc
 @using System.Web.Mvc.Html
+@using EPiServer.Shell
 @inherits System.Web.Mvc.WebViewPage<KachingPlugIn.ViewModels.PlugInViewModel>
 @{
     Layout = null;
 }
 
 <!DOCTYPE html>
-
 <html>
 <head>
     <title>Ka-ching integration</title>
+    <link type="text/css" rel="stylesheet" href="@Paths.ToShellClientResource("ClientResources/epi/themes/legacy/ShellCore.css")" />
+    <link type="text/css" rel="stylesheet" href="@Paths.ToShellClientResource("ClientResources/epi/themes/legacy/ShellCoreLightTheme.css")" />
+    <link type="text/css" rel="stylesheet" href="@Paths.ToResource("CMS", "App_Themes/Default/Styles/system.css")" />
 </head>
 
 <body>
-    <div>
-        <h2>Ka-ching integration</h2>
-
-        <hr />
+    <div class="epi-contentContainer epi-padding">
+        <div class="epi-contentArea">
+            <h1 class="EP-prefix">Ka-ching integration</h1>
+        </div>
 
         @if (Model.ProgressViewModel.Busy)
         {
             <div id="progress">
-                @Html.Partial(Model.ProgressViewLocation, Model.ProgressViewModel)
+                @Html.Partial(Paths.ToResource("KachingPlugIn", "Views/Progress.cshtml"), Model.ProgressViewModel)
             </div>
         }
         else
         {
-            <h3>Specify import URLs</h3>
-
-            using (Html.BeginForm("UpdateProductImportUrl", "KachingPlugIn", FormMethod.Post, new { @class = "form-inline" }))
-            {
-                <p>Products import URL</p>
-                @Html.TextBoxFor(m => m.ProductsImportUrl)
-                <button type="submit">Save</button>
-            }
-            using (Html.BeginForm("UpdateTagsImportUrl", "KachingPlugIn", FormMethod.Post, new { @class = "form-inline" }))
-            {
-                <p>Tags import URL</p>
-                @Html.TextBoxFor(m => m.TagsImportUrl)
-                <button type="submit">Save</button>
-            }
-            using (Html.BeginForm("UpdateFoldersImportUrl", "KachingPlugIn", FormMethod.Post, new { @class = "form-inline" }))
-            {
-                <p>Folders import URL</p>
-                @Html.TextBoxFor(m => m.FoldersImportUrl)
-                <button type="submit">Save</button>
-            }
+            <div class="epi-formArea">
+                @using (Html.BeginForm("UpdateConfiguration", "KachingPlugIn", FormMethod.Post))
+                {
+                    <fieldset>
+                        <legend>Import settings</legend>
+                        <div class="epi-size10">
+                            <div>
+                                @Html.LabelFor(m => m.ExportSingleVariantAsProduct, "Export single variants as product?")
+                                @Html.CheckBoxFor(m => m.ExportSingleVariantAsProduct)
+                            </div>
+                            <div>
+                                @Html.LabelFor(m => m.ProductsImportUrl, "Products import URL")
+                                @Html.TextBoxFor(m => m.ProductsImportUrl)
+                            </div>
+                            <div>
+                                @Html.LabelFor(m => m.FoldersImportUrl, "Folders import URL")
+                                @Html.TextBoxFor(m => m.FoldersImportUrl)
+                            </div>
+                            <div>
+                                @Html.LabelFor(m => m.TagsImportUrl, "Tags import URL")
+                                @Html.TextBoxFor(m => m.TagsImportUrl)
+                            </div>
+                        </div>
+                        <div class="epi-buttonContainer-small">
+                            <button type="submit">Save</button>
+                        </div>
+                    </fieldset>
+                }
+            </div>
 
             <br />
             <hr />
 
-            using (Html.BeginForm("StartFullProductExport", "KachingPlugIn", FormMethod.Post, new { @class = "form-inline" }))
+            using (Html.BeginForm("StartFullProductExport", "KachingPlugIn", FormMethod.Post))
             {
                 <h3>Perform full product export</h3>
                 if (Model.ProductExportStartButtonDisabled)
                 {
-                    <p><em>Attention:</em> Requires valid products import URL. Find the URL in <a href="https://backoffice.ka-ching.dk" target="_blank"> Ka-ching Backoffice</a></p>
+                    <p><em>Attention:</em> Requires valid products import URL. Find the URL in <a href="https://backoffice.ka-ching.dk" target="_blank">Ka-ching Backoffice</a></p>
                 }
                 <button type="submit" onclick="scheduleReloadProgressElement();" disabled='@(Model.ProductExportStartButtonDisabled)'>Start</button>
             }
@@ -63,12 +75,12 @@
             <br />
             <hr />
 
-            using (Html.BeginForm("StartFullCategoryExport", "KachingPlugIn", FormMethod.Post, new { @class = "form-inline" }))
+            using (Html.BeginForm("StartFullCategoryExport", "KachingPlugIn", FormMethod.Post))
             {
                 <h3>Perform full category export</h3>
                 if (Model.CategoryExportStartButtonDisabled)
                 {
-                    <p><em>Attention:</em> Requires valid tags and folders import URLs. Find the URLs in <a href="https://backoffice.ka-ching.dk" target="_blank"> Ka-ching Backoffice</a></p>
+                    <p><em>Attention:</em> Requires valid tags and folders import URLs. Find the URLs in <a href="https://backoffice.ka-ching.dk" target="_blank">Ka-ching Backoffice</a></p>
                 }
                 <button type="submit" onclick="scheduleReloadProgressElement();" disabled='@(Model.CategoryExportStartButtonDisabled)'>Start</button>
             }
