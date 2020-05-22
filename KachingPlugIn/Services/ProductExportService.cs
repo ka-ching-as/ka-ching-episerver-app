@@ -11,6 +11,7 @@ using System.Collections.Generic;
 using System.Linq; 
 using System.Net;
 using System.Threading.Tasks;
+using KachingPlugIn.Configuration;
 
 namespace KachingPlugIn.Services
 {
@@ -100,6 +101,7 @@ namespace KachingPlugIn.Services
 
         public void ExportProduct(ProductContent product, string deletedVariantCode, string url)
         {
+            var configuration = KachingConfiguration.Instance;
             _log.Information("ExportProduct: " + product.Code);
 
             // Bail if not published
@@ -113,7 +115,7 @@ namespace KachingPlugIn.Services
             // Since Ka-ching uses tags for category hierachy we need to go
             // up the tree of nodes to find the correct tags for the product
             var tags = TagsForProduct(product);
-            var kachingProduct = _productFactory.BuildKaChingProduct(product, tags, deletedVariantCode);
+            var kachingProduct = _productFactory.BuildKaChingProduct(product, tags, configuration, deletedVariantCode);
             var products = new List<Product>();
             products.Add(kachingProduct);
             PostKachingProducts(products, url);
@@ -151,6 +153,7 @@ namespace KachingPlugIn.Services
 
         private IList<Product> BuildKachingProducts(IEnumerable<NodeContent> nodes, IList<string> tags)
         {
+            var configuration = KachingConfiguration.Instance;
             var kachingProducts = new List<Product>();
 
             foreach (var node in nodes)
@@ -178,7 +181,7 @@ namespace KachingPlugIn.Services
                             continue;
                         }
 
-                        kachingProducts.Add(_productFactory.BuildKaChingProduct(product, nextTags, null));
+                        kachingProducts.Add(_productFactory.BuildKaChingProduct(product, nextTags, configuration, null));
                     }
                 }
             }

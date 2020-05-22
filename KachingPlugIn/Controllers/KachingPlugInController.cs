@@ -1,10 +1,14 @@
 ﻿using EPiServer.Logging;
 using EPiServer.PlugIn;
+using EPiServer.Security;
+using EPiServer.Shell;
+using KachingPlugIn.Configuration;
 using KachingPlugIn.Helpers;
-using KachingPlugIn.Models;
 using KachingPlugIn.Services;
 using KachingPlugIn.ViewModels;
+using System;
 using System.Web.Mvc;
+using PlugInArea = EPiServer.PlugIn.PlugInArea;
 
 namespace KachingPlugIn.Controllers
 {
@@ -29,16 +33,13 @@ namespace KachingPlugIn.Controllers
 
         public ActionResult Index()
         {
-            var configuration = Configuration.Instance();
+            var configuration = KachingConfiguration.Instance;
 
             var viewModel = new PlugInViewModel();
             viewModel.ProgressViewModel = BuildProgressViewModel();
-            viewModel.ProgressViewLocation = ViewLocation("Progress");
-            viewModel.ProductsImportUrl = configuration.ProductsImportUrl;
-            viewModel.TagsImportUrl = configuration.TagsImportUrl;
-            viewModel.FoldersImportUrl = configuration.FoldersImportUrl;
             viewModel.ProductExportStartButtonDisabled = !configuration.ProductsImportUrl.IsValidProductsImportUrl();
-            viewModel.CategoryExportStartButtonDisabled = !configuration.TagsImportUrl.IsValidTagsImportUrl() || !configuration.FoldersImportUrl.IsValidFoldersImportUrl();
+            viewModel.CategoryExportStartButtonDisabled = !configuration.TagsImportUrl.IsValidTagsImportUrl() ||
+                                                          !configuration.FoldersImportUrl.IsValidFoldersImportUrl();
 
             return View("Index", viewModel);
         }
@@ -46,7 +47,7 @@ namespace KachingPlugIn.Controllers
         [HttpPost]
         public ActionResult StartFullProductExport()
         {
-            var configuration = Configuration.Instance();
+            var configuration = KachingConfiguration.Instance;
             _productExport.StartFullProductExport(configuration.ProductsImportUrl);
             return RedirectToAction("Index", "KachingPlugIn");
         }
@@ -55,38 +56,8 @@ namespace KachingPlugIn.Controllers
         public ActionResult StartFullCategoryExport()
         {
             _log.Information("StartFullCategoryExport");
-            var configuration = Configuration.Instance();
+            var configuration = KachingConfiguration.Instance;
             _categoryExport.StartFullCategoryExport(configuration.TagsImportUrl, configuration.FoldersImportUrl);
-            return RedirectToAction("Index", "KachingPlugIn");
-        }
-
-        [HttpPost]
-        public ActionResult UpdateProductImportUrl(string productsImportUrl)
-        {
-            _log.Information("UpdateProductImportUrl: " + productsImportUrl);
-            var configuration = Configuration.Instance();
-            configuration.ProductsImportUrl = productsImportUrl;
-            configuration.Save();
-            return RedirectToAction("Index", "KachingPlugIn");
-        }
-
-        [HttpPost]
-        public ActionResult UpdateTagsImportUrl(string tagsImportUrl)
-        {
-            _log.Information("UpdateTagsImportUrl: " + tagsImportUrl);
-            var configuration = Configuration.Instance();
-            configuration.TagsImportUrl = tagsImportUrl;
-            configuration.Save();
-            return RedirectToAction("Index", "KachingPlugIn");
-        }
-
-        [HttpPost]
-        public ActionResult UpdateFoldersImportUrl(string foldersImportUrl)
-        {
-            _log.Information("UpdateFoldersImportUrl: " + foldersImportUrl);
-            var configuration = Configuration.Instance();
-            configuration.FoldersImportUrl = foldersImportUrl;
-            configuration.Save();
             return RedirectToAction("Index", "KachingPlugIn");
         }
 
@@ -102,7 +73,19 @@ namespace KachingPlugIn.Controllers
                 _categoryExport.Polls += 1;
             }
 
-            return PartialView(ViewLocation("Progress"), BuildProgressViewModel());
+            return PartialView(
+                Paths.ToResource("KachingPlugIn", "Views/Progress.cshtml"),
+                BuildProgressViewModel());
+        }
+
+        protected override void OnAuthorization(AuthorizationContext filterContext)
+        {
+            if (!PrincipalInfo.HasAdminAccess)
+            {
+                throw new UnauthorizedAccessException();
+            }
+
+            base.OnAuthorization(filterContext);
         }
 
         private ProgressViewModel BuildProgressViewModel()
@@ -137,11 +120,6 @@ namespace KachingPlugIn.Controllers
             }
             
             return result;
-        }
-
-        private string ViewLocation(string viewName)
-        {
-            return $"{EPiServer.Shell.Paths.ProtectedRootPath}KachingPlugIn/Views/{viewName}.cshtml";
         }
     }
 }

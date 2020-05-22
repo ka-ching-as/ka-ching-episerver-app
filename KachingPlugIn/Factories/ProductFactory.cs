@@ -1,71 +1,71 @@
-﻿using EPiServer.Commerce.Catalog.ContentTypes;
-using EPiServer.Logging;
+﻿using EPiServer;
+using EPiServer.Commerce.Catalog.ContentTypes;
+using EPiServer.Commerce.Catalog.Linking;
+using EPiServer.Commerce.SpecializedProperties;
+using EPiServer.Core;
+using EPiServer.Web.Routing;
+using KachingPlugIn.Configuration;
 using KachingPlugIn.Helpers;
 using KachingPlugIn.Models;
-using EPiServer.Web.Routing;
-using Mediachase.Commerce;
 using Mediachase.Commerce.Catalog;
 using Mediachase.Commerce.Markets;
 using Mediachase.Commerce.Pricing;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using EPiServer;
-using EPiServer.Commerce.SpecializedProperties;
+using EPiServer.Logging;
+using Mediachase.Commerce;
 
 namespace KachingPlugIn.Factories
 {
     public class ProductFactory
     {
+        private static readonly ILogger Logger = LogManager.GetLogger(typeof(ProductFactory));
         private readonly IContentLoader _contentLoader;
         private readonly IMarketService _marketService;
         private readonly IUrlResolver _urlResolver;
         private readonly IPriceService _priceService;
+        private readonly IRelationRepository _relationRepository;
         private readonly L10nStringFactory _l10nStringFactory;
-        private readonly ILogger _log = LogManager.GetLogger(typeof(ProductFactory));
 
         public ProductFactory(
             IContentLoader contentLoader,
             IMarketService marketService,
             IUrlResolver urlResolver,
             IPriceService priceService,
+            IRelationRepository relationRepository,
             L10nStringFactory l10NStringFactory)
         {
             _contentLoader = contentLoader;
             _marketService = marketService;
             _urlResolver = urlResolver;
             _priceService = priceService;
+            _relationRepository = relationRepository;
             _l10nStringFactory = l10NStringFactory;
         }
 
-        public Product BuildKaChingProduct(ProductContent product, IList<string> tags, string skipVariantCode)
+        public Product BuildKaChingProduct(
+            ProductContent product,
+            ICollection<string> tags,
+            KachingConfiguration configuration,
+            string skipVariantCode)
         {
             var kachingProduct = new Product();
 
-            /* ---------------------------- */
-            /* Assign id */
-            /* ---------------------------- */
-
             kachingProduct.Id = product.Code;
-
-            /* ---------------------------- */
-            /* Find name for all localizations */
-            /* ---------------------------- */
-
             kachingProduct.Name = _l10nStringFactory.LocalizedProductName(product);
+            kachingProduct.Barcode = GetPropertyStringValue(product, configuration.SystemMappings.BarcodeMetaField);
 
-            /* ---------------------------- */
-            /* Find prices for product */
-            /* RetailPrice in Ka-ching is including VAT style tax and excluding sales tax style tax */
-            /* ---------------------------- */
+            foreach (var mapping in configuration.AttributeMappings.Cast<AttributeMappingElement>())
+            {
+                object value = GetAttributeValue(product, mapping.MetaField);
+                if (value == null)
+                {
+                    continue;
+                }
 
-            kachingProduct.RetailPrice = MarketPriceForCode(product.Code);
-
-            /* ---------------------------- */
-            /* Barcode is just a string, but needs to fit the barcodes on the products in the store.
-             * Don't use this one if your product has variants - see below for assignment on variant */
-            /* ---------------------------- */
-            // kachingProduct.Barcode = product.Barcode;
+                kachingProduct.Attributes[mapping.AttributeId] = value;
+            }
 
             /* ---------------------------- */
             /* Example of dimension and dimension value construction from the Quicksilver site. */
@@ -110,79 +110,105 @@ namespace KachingPlugIn.Factories
                 kachingProduct.ImageUrl = absoluteUrl;
             }
 
-            var kachingVariants = new List<Variant>();
+            IEnumerable<ContentReference> variantRefs = _relationRepository
+                .GetChildren<ProductVariation>(product.ContentLink)
+                .Select(r => r.Child);
 
-            var variantLinks = product.GetVariants();
-            var variants = variantLinks.Select(x => _contentLoader.Get<VariationContent>(x));
-            foreach (var variation in variants)
+            ICollection<VariationContent> variants = _contentLoader
+                .GetItems(variantRefs, LanguageSelector.MasterLanguage())
+                .OfType<VariationContent>()
+                .ToArray();
+
+            if (variants.Count == 1 &&
+                configuration.ExportSingleVariantAsProduct)
             {
-                if (skipVariantCode != null && skipVariantCode == variation.Code)
+                // If the product has only one variant and ExportSingleVariantAsProduct is configured to true,
+                // then put all variant properties on the product instead.
+                var variant = variants.First();
+
+                kachingProduct.Id = variant.Code;
+                kachingProduct.Barcode = GetPropertyStringValue(variant, configuration.SystemMappings.BarcodeMetaField);
+                kachingProduct.Name = _l10nStringFactory.LocalizedVariantName(variant);
+                kachingProduct.RetailPrice = MarketPriceForCode(variant.Code);
+
+                foreach (var mapping in configuration.AttributeMappings.Cast<AttributeMappingElement>())
                 {
-                    continue;
+                    object value = GetAttributeValue(variant, mapping.MetaField);
+                    if (value == null)
+                    {
+                        continue;
+                    }
+
+                    kachingProduct.Attributes[mapping.AttributeId] = value;
                 }
 
-                var kachingVariant = new Variant();
-                kachingVariant.Id = variation.Code;
-
-                /* ---------------------------- */
-                /* Barcode is just a string, but needs to fit the barcodes on the products in the store. */
-                /* ---------------------------- */
-                // kachingVariant.Barcode = variant.Barcode;
-
-                /* ---------------------------- */
-                /* Assign localized variant name if it's different than product name */
-                /* ---------------------------- */
-
-                var variantName = _l10nStringFactory.LocalizedVariantName(variation);
-                if (!variantName.Equals(kachingProduct.Name))
-                {
-                    kachingVariant.Name = variantName;
-                }
-
-                /* ---------------------------- */
-                /* Example of dimension and dimension value assignment from the Quicksilver site. */
-                /* ---------------------------- */
-
-                //kachingVariant.DimensionValues = new Dictionary<string, string>();
-                //kachingVariant.DimensionValues[colorDimension.Id] = variant.Color.ToLower().Replace(' ', '_');
-                //kachingVariant.DimensionValues[sizeDimension.Id] = variant.Size.ToLower().Replace(' ', '_');
-
-                /* ---------------------------- */
-                /* Find prices for variant */
-                /* RetailPrice in Ka-ching is including VAT style tax and excluding sales tax style tax */
-                /* ---------------------------- */
-
-                kachingVariant.RetailPrice = MarketPriceForCode(variation.Code);
-
-                /* ---------------------------- */
-                /* Find an image */
-                /* ---------------------------- */
-
-                CommerceMedia variantImage = variation.CommerceMediaCollection.FirstOrDefault();
-                if (variantImage != null)
-                {
-                    string absoluteUrl = _urlResolver.GetUrl(
-                        variantImage.AssetLink,
-                        string.Empty,
-                        new UrlResolverArguments { ForceCanonical = true });
-                    kachingVariant.ImageUrl = absoluteUrl;
-                }
-
-                // Make sure umbrella product is assigned an image url
-                // If references are likely to change without triggering an update in Ka-ching
-                // talk to us about enabling image import where Ka-ching downloads 
-                // and stores the image to avoid dangling references.
                 if (kachingProduct.ImageUrl == null)
                 {
-                    kachingProduct.ImageUrl = kachingVariant.ImageUrl;
+                    CommerceMedia variantImage = variant.CommerceMediaCollection.FirstOrDefault();
+                    if (variantImage != null)
+                    {
+                        string absoluteUrl = _urlResolver.GetUrl(
+                            variantImage.AssetLink,
+                            string.Empty,
+                            new UrlResolverArguments { ForceCanonical = true });
+                        kachingProduct.ImageUrl = absoluteUrl;
+                    }
+                }
+            }
+            else if (variants.Count > 0)
+            {
+                var kachingVariants = new List<Variant>(variants.Count);
+
+                foreach (var variant in variants)
+                {
+                    if (skipVariantCode != null &&
+                        skipVariantCode == variant.Code)
+                    {
+                        continue;
+                    }
+
+                    var kachingVariant = new Variant();
+                    kachingVariant.Id = variant.Code;
+                    //kachingVariant.Barcode = GetPropertyStringValue(variant, configuration.FieldMappings.BarcodeField);
+
+                    var variantName = _l10nStringFactory.LocalizedVariantName(variant);
+                    if (!variantName.Equals(kachingProduct.Name))
+                    {
+                        kachingVariant.Name = variantName;
+                    }
+
+                    kachingVariant.RetailPrice = MarketPriceForCode(variant.Code);
+
+                    foreach (var mapping in configuration.AttributeMappings.Cast<AttributeMappingElement>())
+                    {
+                        object value = GetAttributeValue(variant, mapping.MetaField);
+                        if (value == null)
+                        {
+                            continue;
+                        }
+
+                        kachingVariant.Attributes[mapping.AttributeId] = value;
+                    }
+
+                    CommerceMedia variantImage = variant.CommerceMediaCollection.FirstOrDefault();
+                    if (variantImage != null)
+                    {
+                        string absoluteUrl = _urlResolver.GetUrl(
+                            variantImage.AssetLink,
+                            string.Empty,
+                            new UrlResolverArguments { ForceCanonical = true });
+                        kachingVariant.ImageUrl = absoluteUrl;
+                    }
+
+                    if (kachingProduct.ImageUrl == null)
+                    {
+                        kachingProduct.ImageUrl = kachingVariant.ImageUrl;
+                    }
+
+                    kachingVariants.Add(kachingVariant);
                 }
 
-                kachingVariants.Add(kachingVariant);
-            }
-
-            if (kachingVariants.Count > 0)
-            {
-                kachingProduct.Variants = kachingVariants.ToArray();
+                kachingProduct.Variants = kachingVariants;
             }
 
             /* ---------------------------- */
@@ -247,6 +273,56 @@ namespace KachingPlugIn.Factories
             };
 
             return result;
+        }
+
+        private object GetAttributeValue(IContentData content, string propertyName)
+        {
+            if (string.IsNullOrWhiteSpace(propertyName))
+            {
+                return null;
+            }
+
+            PropertyData data = content.Property[propertyName];
+            if (data == null || data.IsNull)
+            {
+                return null;
+            }
+
+            switch (data.Type)
+            {
+                case PropertyDataType.Number:
+                    return (int)data.Value;
+                case PropertyDataType.Boolean:
+                    return (bool)data.Value ? "true" : "false";
+                case PropertyDataType.String:
+                case PropertyDataType.LongString:
+                    // TODO: Support culture-specific strings.
+                    return new AttributeTextValue((string)data.Value);
+                default:
+                    Logger.Warning(
+                        "Mapped property ('{0}') has unsupported property type ({1}). Skipping.",
+                        propertyName,
+                        data.Type);
+                    return null;
+            }
+        }
+
+        private string GetPropertyStringValue(IContentData content, string propertyName)
+        {
+            if (string.IsNullOrWhiteSpace(propertyName))
+            {
+                return null;
+            }
+
+            PropertyData data = content.Property[propertyName];
+            if (data == null || data.IsNull)
+            {
+                return null;
+            }
+
+            return data.Value is string stringValue
+                ? stringValue
+                : null;
         }
 
         private MarketPrice MarketPriceForCode(string code)
