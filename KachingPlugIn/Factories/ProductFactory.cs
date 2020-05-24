@@ -53,8 +53,9 @@ namespace KachingPlugIn.Factories
             var kachingProduct = new Product();
 
             kachingProduct.Id = product.Code;
-            kachingProduct.Name = _l10nStringFactory.LocalizedProductName(product);
             kachingProduct.Barcode = GetPropertyStringValue(product, configuration.SystemMappings.BarcodeMetaField);
+            kachingProduct.Name = _l10nStringFactory.GetLocalizedString(product, nameof(product.DisplayName));
+            kachingProduct.Description = _l10nStringFactory.GetLocalizedString(product, "Description");
 
             foreach (var mapping in configuration.AttributeMappings.Cast<AttributeMappingElement>())
             {
@@ -128,7 +129,7 @@ namespace KachingPlugIn.Factories
 
                 kachingProduct.Id = variant.Code;
                 kachingProduct.Barcode = GetPropertyStringValue(variant, configuration.SystemMappings.BarcodeMetaField);
-                kachingProduct.Name = _l10nStringFactory.LocalizedVariantName(variant);
+                kachingProduct.Name = _l10nStringFactory.GetLocalizedString(variant, nameof(variant.DisplayName));
                 kachingProduct.RetailPrice = MarketPriceForCode(variant.Code);
 
                 foreach (var mapping in configuration.AttributeMappings.Cast<AttributeMappingElement>())
@@ -169,9 +170,9 @@ namespace KachingPlugIn.Factories
 
                     var kachingVariant = new Variant();
                     kachingVariant.Id = variant.Code;
-                    //kachingVariant.Barcode = GetPropertyStringValue(variant, configuration.FieldMappings.BarcodeField);
+                    kachingVariant.Barcode = GetPropertyStringValue(variant, configuration.SystemMappings.BarcodeMetaField);
 
-                    var variantName = _l10nStringFactory.LocalizedVariantName(variant);
+                    var variantName = _l10nStringFactory.GetLocalizedString(variant, nameof(variant.DisplayName));
                     if (!variantName.Equals(kachingProduct.Name))
                     {
                         kachingVariant.Name = variantName;
