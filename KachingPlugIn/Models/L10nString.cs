@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using Newtonsoft.Json;
 
 namespace KachingPlugIn.Models
@@ -6,15 +7,17 @@ namespace KachingPlugIn.Models
     [JsonConverter(typeof(L10nStringConverter))]
     public class L10nString
     {
+        public static readonly L10nString EmptyLocalized = new L10nString(new Dictionary<string, string>(0));
+
         public string Unlocalized { get; }
-        public Dictionary<string, string> Localized { get; }
+        public IDictionary<string, string> Localized { get; }
 
         public L10nString(string value)
         {
             Unlocalized = value;
         }
 
-        public L10nString(Dictionary<string, string> value)
+        public L10nString(IDictionary<string, string> value)
         {
             Localized = value;
         }
