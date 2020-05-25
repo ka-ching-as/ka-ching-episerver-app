@@ -13,10 +13,6 @@ using Mediachase.Commerce.Pricing;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using EPiServer;
-using EPiServer.Commerce.Catalog.Linking;
-using EPiServer.Commerce.SpecializedProperties;
-using EPiServer.Core;
 using EPiServer.Web;
 using EPiServer.Logging;
 using KachingPlugIn.KachingPlugIn.Models;
@@ -360,6 +356,8 @@ namespace KachingPlugIn.Factories
             }
 
             return absoluteUrl;
+        }
+
         private object GetAttributeValue(IContentData content, string propertyName)
         {
             if (string.IsNullOrWhiteSpace(propertyName))
