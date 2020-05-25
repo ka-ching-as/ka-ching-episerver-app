@@ -327,6 +327,10 @@ namespace KachingPlugIn.Factories
 
         private MarketPrice MarketPriceForCode(string code)
         {
+            /* ---------------------------- */
+            /* Find prices for all enabled markets  */
+            /* ---------------------------- */
+
             var markets = _marketService.GetAllMarkets();
             var prices = new Dictionary<string, decimal>();
 

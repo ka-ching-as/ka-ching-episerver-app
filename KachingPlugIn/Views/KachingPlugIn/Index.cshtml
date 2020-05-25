@@ -29,6 +29,39 @@
         }
         else
         {
+            <div class="epi-formArea">
+                @using (Html.BeginForm("UpdateConfiguration", "KachingPlugIn", FormMethod.Post))
+                {
+                    <fieldset>
+                        <legend>Import settings</legend>
+                        <div class="epi-size10">
+                            <div>
+                                @Html.LabelFor(m => m.ExportSingleVariantAsProduct, "Export single variants as product?")
+                                @Html.CheckBoxFor(m => m.ExportSingleVariantAsProduct)
+                            </div>
+                            <div>
+                                @Html.LabelFor(m => m.ProductsImportUrl, "Products import URL")
+                                @Html.TextBoxFor(m => m.ProductsImportUrl)
+                            </div>
+                            <div>
+                                @Html.LabelFor(m => m.FoldersImportUrl, "Folders import URL")
+                                @Html.TextBoxFor(m => m.FoldersImportUrl)
+                            </div>
+                            <div>
+                                @Html.LabelFor(m => m.TagsImportUrl, "Tags import URL")
+                                @Html.TextBoxFor(m => m.TagsImportUrl)
+                            </div>
+                        </div>
+                        <div class="epi-buttonContainer-small">
+                            <button type="submit">Save</button>
+                        </div>
+                    </fieldset>
+                }
+            </div>
+
+            <br />
+            <hr />
+
             using (Html.BeginForm("StartFullProductExport", "KachingPlugIn", FormMethod.Post))
             {
                 <h3>Perform full product export</h3>
