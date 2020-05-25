@@ -31,6 +31,10 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="Configuration\AttributeMappingCollection.cs" />
+    <Compile Include="Configuration\AttributeMappingElement.cs" />
+    <Compile Include="Configuration\KachingConfiguration.cs" />
+    <Compile Include="Configuration\SystemMappingElement.cs" />
     <Compile Include="KachingPlugIn\Controllers\KachingPlugInController.cs" />
     <Compile Include="KachingPlugIn\EventHandlers\CatalogEventHandler.cs" />
     <Compile Include="KachingPlugIn\Factories\ProductFactory.cs" />
@@ -38,10 +42,11 @@
     <Compile Include="KachingPlugIn\Helpers\APIFacade.cs" />
     <Compile Include="KachingPlugIn\Helpers\StringExtensions.cs" />
     <Compile Include="KachingPlugIn\Initialization\Initialization.cs" />
+    <Compile Include="KachingPlugIn\Models\AttributeTextValue.cs" />
     <Compile Include="KachingPlugIn\Models\Dimension.cs" />
     <Compile Include="KachingPlugIn\Models\DimensionValue.cs" />
+    <Compile Include="KachingPlugIn\Models\FieldMappingConfiguration.cs" />
     <Compile Include="KachingPlugIn\Models\Folder.cs" />
-    <Compile Include="KachingPlugIn\Models\Configuration.cs" />
     <Compile Include="KachingPlugIn\Models\MarketPriceConverter.cs" />
     <Compile Include="KachingPlugIn\Models\Product.cs" />
     <Compile Include="KachingPlugIn\Models\Tag.cs" />
@@ -65,12 +70,8 @@
     <Content Include="KachingPlugIn\Views\Progress.cshtml" />
     <None Include="module.config" />
     <None Include="packages.config" />
-    <None Include="web.config.install.xdt">
-      <SubType>Designer</SubType>
-    </None>
-    <None Include="web.config.uninstall.xdt">
-      <SubType>Designer</SubType>
-    </None>
+    <None Include="web.config.install.xdt" />
+      <None Include="web.config.uninstall.xdt" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="AjaxControlToolkit, Version=3.0.30930.28736, Culture=neutral, PublicKeyToken=28f01b0e84b6d53e, processorArchitecture=MSIL">
