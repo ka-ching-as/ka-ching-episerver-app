@@ -14,7 +14,8 @@
            foldersImportUrl=""
            tagsImportUrl=""
            exportSingleVariantAsProduct="false" xdt:Transform="InsertIfMissing">
-    <systemMappings barcodeMetaField=""/>
+    <systemMappings barcodeMetaField=""
+                    descriptionMetaField=""/>
     <attributeMappings>
       <!--<add metaField="Brand" attributeId="brand"/>-->
     </attributeMappings>
