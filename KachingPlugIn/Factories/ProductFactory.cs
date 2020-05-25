@@ -13,6 +13,11 @@ using Mediachase.Commerce.Pricing;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using EPiServer;
+using EPiServer.Commerce.Catalog.Linking;
+using EPiServer.Commerce.SpecializedProperties;
+using EPiServer.Core;
+using EPiServer.Web;
 using EPiServer.Logging;
 using Mediachase.Commerce;
 
@@ -26,6 +31,7 @@ namespace KachingPlugIn.Factories
         private readonly IUrlResolver _urlResolver;
         private readonly IPriceService _priceService;
         private readonly IRelationRepository _relationRepository;
+        private readonly ISiteDefinitionResolver _siteDefinitionResolver;
         private readonly L10nStringFactory _l10nStringFactory;
 
         public ProductFactory(
@@ -34,6 +40,7 @@ namespace KachingPlugIn.Factories
             IUrlResolver urlResolver,
             IPriceService priceService,
             IRelationRepository relationRepository,
+            ISiteDefinitionResolver siteDefinitionResolver,
             L10nStringFactory l10NStringFactory)
         {
             _contentLoader = contentLoader;
@@ -41,6 +48,7 @@ namespace KachingPlugIn.Factories
             _urlResolver = urlResolver;
             _priceService = priceService;
             _relationRepository = relationRepository;
+            _siteDefinitionResolver = siteDefinitionResolver;
             _l10nStringFactory = l10NStringFactory;
         }
 
@@ -103,11 +111,8 @@ namespace KachingPlugIn.Factories
             CommerceMedia productImage = product.CommerceMediaCollection.FirstOrDefault();
             if (productImage != null)
             {
-                string absoluteUrl = _urlResolver.GetUrl(
-                    productImage.AssetLink,
-                    string.Empty,
-                    new UrlResolverArguments { ForceCanonical = true });
-                kachingProduct.ImageUrl = absoluteUrl;
+                Uri absoluteUrl = GetAbsoluteUrl(productImage.AssetLink);
+                kachingProduct.ImageUrl = absoluteUrl.AbsoluteUri;
             }
 
             IEnumerable<ContentReference> variantRefs = _relationRepository
@@ -147,11 +152,8 @@ namespace KachingPlugIn.Factories
                     CommerceMedia variantImage = variant.CommerceMediaCollection.FirstOrDefault();
                     if (variantImage != null)
                     {
-                        string absoluteUrl = _urlResolver.GetUrl(
-                            variantImage.AssetLink,
-                            string.Empty,
-                            new UrlResolverArguments { ForceCanonical = true });
-                        kachingProduct.ImageUrl = absoluteUrl;
+                        Uri absoluteUrl = GetAbsoluteUrl(variantImage.AssetLink);
+                        kachingProduct.ImageUrl = absoluteUrl.AbsoluteUri;
                     }
                 }
             }
@@ -193,11 +195,8 @@ namespace KachingPlugIn.Factories
                     CommerceMedia variantImage = variant.CommerceMediaCollection.FirstOrDefault();
                     if (variantImage != null)
                     {
-                        string absoluteUrl = _urlResolver.GetUrl(
-                            variantImage.AssetLink,
-                            string.Empty,
-                            new UrlResolverArguments { ForceCanonical = true });
-                        kachingVariant.ImageUrl = absoluteUrl;
+                        Uri absoluteUrl = GetAbsoluteUrl(variantImage.AssetLink);
+                        kachingVariant.ImageUrl = absoluteUrl.AbsoluteUri;
                     }
 
                     if (kachingProduct.ImageUrl == null)
@@ -275,6 +274,24 @@ namespace KachingPlugIn.Factories
             return result;
         }
 
+        private Uri GetAbsoluteUrl(ContentReference contentRef)
+        {
+            string url = _urlResolver.GetUrl(
+                contentRef,
+                string.Empty,
+                new UrlResolverArguments { ForceCanonical = true });
+
+            if (Uri.TryCreate(url, UriKind.RelativeOrAbsolute, out Uri absoluteUrl) &&
+                !absoluteUrl.IsAbsoluteUri)
+            {
+                var siteDefinition = _siteDefinitionResolver.GetByContent(
+                    contentRef,
+                    true,
+                    true);
+                absoluteUrl = new Uri(siteDefinition.SiteUrl, absoluteUrl);
+            }
+
+            return absoluteUrl;
         private object GetAttributeValue(IContentData content, string propertyName)
         {
             if (string.IsNullOrWhiteSpace(propertyName))
