@@ -34,7 +34,7 @@ namespace KachingPlugIn.Factories
                 var localizedContent = _contentLoader.Get<CatalogContentBase>(content.ContentLink, culture);
 
                 PropertyData data = localizedContent.Property[propertyName];
-                if (data == null || data.IsNull)
+                if (data == null || data.IsNull || !(data.Value is string))
                 {
                     continue;
                 }

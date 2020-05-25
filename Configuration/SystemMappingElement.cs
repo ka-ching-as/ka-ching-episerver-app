@@ -7,6 +7,9 @@ namespace KachingPlugIn.Configuration
         [ConfigurationProperty("barcodeMetaField")]
         public string BarcodeMetaField => (string)base["barcodeMetaField"];
 
+        [ConfigurationProperty("descriptionMetaField")]
+        public string DescriptionMetaField => (string)base["descriptionMetaField"];
+
         [ConfigurationProperty("priceUnitMetaField")]
         public string PriceUnitMetaField => (string) base["priceUnitMetaField"];
     }

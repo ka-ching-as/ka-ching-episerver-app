@@ -60,7 +60,7 @@ namespace KachingPlugIn.Factories
             kachingProduct.Id = product.Code;
             kachingProduct.Barcode = GetPropertyStringValue(product, configuration.SystemMappings.BarcodeMetaField);
             kachingProduct.Name = _l10nStringFactory.GetLocalizedString(product, nameof(product.DisplayName));
-            kachingProduct.Description = _l10nStringFactory.GetLocalizedString(product, "Description");
+            kachingProduct.Description = _l10nStringFactory.GetLocalizedString(product, configuration.SystemMappings.DescriptionMetaField);
 
             foreach (var mapping in configuration.AttributeMappings.Cast<AttributeMappingElement>())
             {
@@ -222,29 +222,6 @@ namespace KachingPlugIn.Factories
             {
                 kachingProduct.Tags[tag] = true;
             }
-
-            /* ---------------------------- */
-            /* Example of how to construct a description string from the Quicksilver site */
-            /* ---------------------------- */
-            
-            //var html = product.Description.ToEditString();
-            //var htmlDoc = new HtmlDocument();
-            //htmlDoc.LoadHtml(html);
-            //var text = htmlDoc.DocumentNode.InnerText;
-
-            //string longText = null;
-            //if (product.LongDescription != null)
-            //{
-            //    htmlDoc.LoadHtml(product.LongDescription.ToEditString());
-            //    longText = htmlDoc.DocumentNode.InnerText;
-            //}
-
-            //var description = text;
-            //if (longText != null)
-            //{
-            //    description = longText + "\n\n" + text;
-            //}
-            //kachingProduct.Description = new L10nString(description);
 
             return kachingProduct;
         }
