@@ -1,13 +1,13 @@
-﻿using System;
-using EPiServer.Logging;
+﻿using EPiServer.Logging;
 using EPiServer.PlugIn;
-using KachingPlugIn.Helpers;
-using KachingPlugIn.Models;
-using KachingPlugIn.Services;
-using KachingPlugIn.ViewModels;
-using System.Web.Mvc;
 using EPiServer.Security;
 using EPiServer.Shell;
+using KachingPlugIn.Configuration;
+using KachingPlugIn.Helpers;
+using KachingPlugIn.Services;
+using KachingPlugIn.ViewModels;
+using System;
+using System.Web.Mvc;
 using PlugInArea = EPiServer.PlugIn.PlugInArea;
 
 namespace KachingPlugIn.Controllers
@@ -33,14 +33,10 @@ namespace KachingPlugIn.Controllers
 
         public ActionResult Index()
         {
-            var configuration = Configuration.Instance();
+            var configuration = KachingConfiguration.Instance;
 
             var viewModel = new PlugInViewModel();
             viewModel.ProgressViewModel = BuildProgressViewModel();
-            viewModel.ExportSingleVariantAsProduct = configuration.ExportSingleVariantAsProduct;
-            viewModel.ProductsImportUrl = configuration.ProductsImportUrl;
-            viewModel.TagsImportUrl = configuration.TagsImportUrl;
-            viewModel.FoldersImportUrl = configuration.FoldersImportUrl;
             viewModel.ProductExportStartButtonDisabled = !configuration.ProductsImportUrl.IsValidProductsImportUrl();
             viewModel.CategoryExportStartButtonDisabled = !configuration.TagsImportUrl.IsValidTagsImportUrl() ||
                                                           !configuration.FoldersImportUrl.IsValidFoldersImportUrl();
@@ -51,7 +47,7 @@ namespace KachingPlugIn.Controllers
         [HttpPost]
         public ActionResult StartFullProductExport()
         {
-            var configuration = Configuration.Instance();
+            var configuration = KachingConfiguration.Instance;
             _productExport.StartFullProductExport(configuration.ProductsImportUrl);
             return RedirectToAction("Index", "KachingPlugIn");
         }
@@ -60,21 +56,8 @@ namespace KachingPlugIn.Controllers
         public ActionResult StartFullCategoryExport()
         {
             _log.Information("StartFullCategoryExport");
-            var configuration = Configuration.Instance();
+            var configuration = KachingConfiguration.Instance;
             _categoryExport.StartFullCategoryExport(configuration.TagsImportUrl, configuration.FoldersImportUrl);
-            return RedirectToAction("Index", "KachingPlugIn");
-        }
-
-        [HttpPost]
-        public ActionResult UpdateConfiguration(PlugInViewModel viewModel)
-        {
-            var configuration = Configuration.Instance();
-            configuration.ExportSingleVariantAsProduct = viewModel.ExportSingleVariantAsProduct;
-            configuration.FoldersImportUrl = viewModel.FoldersImportUrl;
-            configuration.ProductsImportUrl = viewModel.ProductsImportUrl;
-            configuration.TagsImportUrl = viewModel.TagsImportUrl;
-            configuration.Save();
-
             return RedirectToAction("Index", "KachingPlugIn");
         }
 

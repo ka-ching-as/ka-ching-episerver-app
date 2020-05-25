@@ -20,9 +20,9 @@
   </metadata>
   <files>
     <file src="bin\$configuration$\KachingPlugIn.dll" target="lib\net461\" />
-    <file src="KachingPlugin/Views/**/*.cshtml" target="content\modules\_protected\" />
-    <file src="module.config" target="content\modules\_protected\KachingPlugIn\" />
-	  <file src="web.config.install.xdt" target="content" />
-    <file src="web.config.uninstall.xdt" target="content" />
+    <file src="KachingPlugin\Views\**\*.cshtml" target="content\net461\modules\_protected\KachingPlugIn\Views" />
+    <file src="module.config" target="content\net461\modules\_protected\KachingPlugIn\" />
+	  <file src="web.config.install.xdt" target="content\net461" />
+    <file src="web.config.uninstall.xdt" target="content\net461" />
   </files>
 </package>
