@@ -48,11 +48,13 @@
     <Compile Include="KachingPlugIn\Models\FieldMappingConfiguration.cs" />
     <Compile Include="KachingPlugIn\Models\Folder.cs" />
     <Compile Include="KachingPlugIn\Models\MarketPriceConverter.cs" />
+    <Compile Include="KachingPlugIn\Models\PriceUnit.cs" />
     <Compile Include="KachingPlugIn\Models\Product.cs" />
     <Compile Include="KachingPlugIn\Models\Tag.cs" />
     <Compile Include="KachingPlugIn\Models\L10nString.cs" />
     <Compile Include="KachingPlugIn\Models\MarketPrice.cs" />
     <Compile Include="KachingPlugIn\Models\ProductMetadata.cs" />
+    <Compile Include="KachingPlugIn\Models\UnitPricing.cs" />
     <Compile Include="KachingPlugIn\Models\Variant.cs" />
     <Compile Include="KachingPlugIn\Services\CategoryExportService.cs" />
     <Compile Include="KachingPlugIn\Services\CategoryExportSingleton.cs" />
@@ -71,7 +73,7 @@
     <None Include="module.config" />
     <None Include="packages.config" />
     <None Include="web.config.install.xdt" />
-      <None Include="web.config.uninstall.xdt" />
+    <None Include="web.config.uninstall.xdt" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="AjaxControlToolkit, Version=3.0.30930.28736, Culture=neutral, PublicKeyToken=28f01b0e84b6d53e, processorArchitecture=MSIL">

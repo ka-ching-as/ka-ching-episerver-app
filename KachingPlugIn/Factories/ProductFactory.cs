@@ -13,12 +13,9 @@ using Mediachase.Commerce.Pricing;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using EPiServer;
-using EPiServer.Commerce.Catalog.Linking;
-using EPiServer.Commerce.SpecializedProperties;
-using EPiServer.Core;
 using EPiServer.Web;
 using EPiServer.Logging;
+using KachingPlugIn.KachingPlugIn.Models;
 using Mediachase.Commerce;
 
 namespace KachingPlugIn.Factories
@@ -134,7 +131,9 @@ namespace KachingPlugIn.Factories
                 kachingProduct.Id = variant.Code;
                 kachingProduct.Barcode = GetPropertyStringValue(variant, configuration.SystemMappings.BarcodeMetaField);
                 kachingProduct.Name = _l10nStringFactory.LocalizedVariantName(variant);
-                kachingProduct.RetailPrice = MarketPriceForCode(variant.Code);
+
+                MarketPrice retailPrice = MarketPriceForCode(variant.Code);
+                AddProductPricing(kachingProduct, product, retailPrice, configuration.SystemMappings.PriceUnitMetaField);
 
                 foreach (var mapping in configuration.AttributeMappings.Cast<AttributeMappingElement>())
                 {
@@ -171,7 +170,7 @@ namespace KachingPlugIn.Factories
 
                     var kachingVariant = new Variant();
                     kachingVariant.Id = variant.Code;
-                    //kachingVariant.Barcode = GetPropertyStringValue(variant, configuration.FieldMappings.BarcodeField);
+                    kachingVariant.Barcode = GetPropertyStringValue(variant, configuration.SystemMappings.BarcodeMetaField);
 
                     var variantName = _l10nStringFactory.LocalizedVariantName(variant);
                     if (!variantName.Equals(kachingProduct.Name))
@@ -179,7 +178,10 @@ namespace KachingPlugIn.Factories
                         kachingVariant.Name = variantName;
                     }
 
-                    kachingVariant.RetailPrice = MarketPriceForCode(variant.Code);
+                    if (kachingProduct.UnitPricing == null)
+                    {
+                        kachingVariant.RetailPrice = MarketPriceForCode(variant.Code);
+                    }
 
                     foreach (var mapping in configuration.AttributeMappings.Cast<AttributeMappingElement>())
                     {
@@ -223,7 +225,7 @@ namespace KachingPlugIn.Factories
             /* ---------------------------- */
             /* Example of how to construct a description string from the Quicksilver site */
             /* ---------------------------- */
-
+            
             //var html = product.Description.ToEditString();
             //var htmlDoc = new HtmlDocument();
             //htmlDoc.LoadHtml(html);
@@ -274,6 +276,71 @@ namespace KachingPlugIn.Factories
             return result;
         }
 
+        private void AddProductPricing(
+            Product kachingProduct,
+            CatalogContentBase catalogContent,
+            MarketPrice retailPrice,
+            string propertyName)
+        {
+            if (string.IsNullOrWhiteSpace(propertyName))
+            {
+                kachingProduct.RetailPrice = retailPrice;
+                return;
+            }
+
+            string priceUnit = GetPropertyStringValue(catalogContent, propertyName);
+
+            string kachingPriceUnit;
+            switch (priceUnit?.ToLowerInvariant())
+            {
+                case "g":
+                    kachingPriceUnit = "mass/g";
+                    break;
+                case "kg":
+                    kachingPriceUnit = "mass/kg";
+                    break;
+                case "m":
+                    kachingPriceUnit = "length/m";
+                    break;
+                case "cm":
+                    kachingPriceUnit = "length/cm";
+                    break;
+                case "mm":
+                    kachingPriceUnit = "length/mm";
+                    break;
+                case "m2":
+                    kachingPriceUnit = "area/m2";
+                    break;
+                case "cm2":
+                    kachingPriceUnit = "area/cm2";
+                    break;
+                case "mm2":
+                    kachingPriceUnit = "area/mm2";
+                    break;
+                case "l":
+                    kachingPriceUnit = "volume/l";
+                    break;
+                case "dl":
+                    kachingPriceUnit = "volume/dl";
+                    break;
+                case "cl":
+                    kachingPriceUnit = "volume/cl";
+                    break;
+                case "ml":
+                    kachingPriceUnit = "volume/ml";
+                    break;
+                default:
+                    kachingProduct.RetailPrice = retailPrice;
+                    return;
+            }
+
+            kachingProduct.UnitPricing = new UnitPricing
+            {
+                Unit = kachingPriceUnit,
+                RetailPricePerUnit = retailPrice
+            };
+        }
+
         private Uri GetAbsoluteUrl(ContentReference contentRef)
         {
             string url = _urlResolver.GetUrl(
@@ -292,6 +359,8 @@ namespace KachingPlugIn.Factories
             }
 
             return absoluteUrl;
+        }
+
         private object GetAttributeValue(IContentData content, string propertyName)
         {
             if (string.IsNullOrWhiteSpace(propertyName))
