@@ -57,7 +57,6 @@
     <Compile Include="KachingPlugIn\Models\ProductMetadata.cs" />
     <Compile Include="KachingPlugIn\Models\UnitPricing.cs" />
     <Compile Include="KachingPlugIn\Models\Variant.cs" />
-    <Compile Include="KachingPlugIn\PriceUnitSelectionFactory.cs" />
     <Compile Include="KachingPlugIn\Services\CategoryExportService.cs" />
     <Compile Include="KachingPlugIn\Services\CategoryExportSingleton.cs" />
     <Compile Include="KachingPlugIn\Services\IExportState.cs" />
