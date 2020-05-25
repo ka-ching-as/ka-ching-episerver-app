@@ -133,7 +133,7 @@ namespace KachingPlugIn.Factories
                 kachingProduct.Name = _l10nStringFactory.LocalizedVariantName(variant);
 
                 MarketPrice retailPrice = MarketPriceForCode(variant.Code);
-                AddUnitPricing(kachingProduct, product, retailPrice, configuration.SystemMappings.PriceUnitMetaField);
+                AddProductPricing(kachingProduct, product, retailPrice, configuration.SystemMappings.PriceUnitMetaField);
 
                 foreach (var mapping in configuration.AttributeMappings.Cast<AttributeMappingElement>())
                 {
@@ -178,7 +178,10 @@ namespace KachingPlugIn.Factories
                         kachingVariant.Name = variantName;
                     }
 
-                    kachingVariant.RetailPrice = MarketPriceForCode(variant.Code);
+                    if (kachingProduct.UnitPricing == null)
+                    {
+                        kachingVariant.RetailPrice = MarketPriceForCode(variant.Code);
+                    }
 
                     foreach (var mapping in configuration.AttributeMappings.Cast<AttributeMappingElement>())
                     {
@@ -273,7 +276,7 @@ namespace KachingPlugIn.Factories
             return result;
         }
 
-        private void AddUnitPricing(
+        private void AddProductPricing(
             Product kachingProduct,
             CatalogContentBase catalogContent,
             MarketPrice retailPrice,
