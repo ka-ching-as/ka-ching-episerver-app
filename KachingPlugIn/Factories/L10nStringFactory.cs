@@ -1,67 +1,47 @@
 ﻿using EPiServer;
 using EPiServer.Commerce.Catalog.ContentTypes;
-using EPiServer.Core;
-using EPiServer.DataAbstraction.Internal;
-using EPiServer.Logging;
 using KachingPlugIn.Models;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.Globalization;
+using EPiServer.Core;
 
 namespace KachingPlugIn.Factories
 {
     public class L10nStringFactory
     {
-        private readonly LanguageBranchRepository _languageBranchRepository;
         private readonly IContentLoader _contentLoader;
-        private readonly ILogger _log = LogManager.GetLogger(typeof(L10nStringFactory));
 
         public L10nStringFactory(
-            LanguageBranchRepository languageBranchRepository,
             IContentLoader contentLoader)
         {
-            _languageBranchRepository = languageBranchRepository;
             _contentLoader = contentLoader;
         }
 
-        public L10nString LocalizedProductName(ProductContent product)
+        public L10nString GetLocalizedString(CatalogContentBase content, string propertyName)
         {
-            return LocalizedContentDisplayName(product as IContent);
-        }
-
-        public L10nString LocalizedVariantName(VariationContent variation)
-        {
-            return LocalizedContentDisplayName(variation as IContent);
-        }
-
-        public L10nString LocalizedCategoryName(NodeContent category)
-        {
-            return LocalizedContentDisplayName(category as IContent);
-        }
-
-        private L10nString LocalizedContentDisplayName(IContent content)
-        {
-            var languageDictionary = new Dictionary<string, string>();
-            var languages = _languageBranchRepository.ListAll();
-            foreach (var language in languages)
+            if (!content.Property.Contains(propertyName))
             {
-                var languageOption = LanguageLoaderOption.Specific(language.Culture);
-                var options = new LoaderOptions() { languageOption };
-                if (content is NodeContent)
-                {
-                    var c = _contentLoader.Get<NodeContent>(content.ContentLink, options);
-                    if (c != null && c.DisplayName != null && language.Culture != null && language.Culture.TwoLetterISOLanguageName != null)
-                    {
-                        languageDictionary[language.Culture.TwoLetterISOLanguageName] = c.DisplayName;
-                    }
-                }
-                else if (content is EntryContentBase)
-                {
-                    var c = _contentLoader.Get<EntryContentBase>(content.ContentLink, options);
-                    if (c != null && c.DisplayName != null && language.Culture != null && language.Culture.TwoLetterISOLanguageName != null)
-                    {
-                        languageDictionary[language.Culture.TwoLetterISOLanguageName] = c.DisplayName;
-                    }
-                }
+                return L10nString.EmptyLocalized;
             }
+
+            Debug.Assert(content.ExistingLanguages is ICollection<CultureInfo>);
+            var languageDictionary = new Dictionary<string, string>();
+            var cultures = content.ExistingLanguages;
+
+            foreach (var culture in cultures)
+            {
+                var localizedContent = _contentLoader.Get<CatalogContentBase>(content.ContentLink, culture);
+
+                PropertyData data = localizedContent.Property[propertyName];
+                if (data == null || data.IsNull || !(data.Value is string))
+                {
+                    continue;
+                }
+
+                languageDictionary[culture.TwoLetterISOLanguageName] = (string)data.Value;
+            }
+
             return new L10nString(languageDictionary);
         }
     }

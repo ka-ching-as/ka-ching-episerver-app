@@ -121,7 +121,7 @@ namespace KachingPlugIn.Services
 
                 tag.TagValue = node.Code.KachingCompatibleKey();
 
-                tag.Name = _l10nStringFactory.LocalizedCategoryName(node);
+                tag.Name = _l10nStringFactory.GetLocalizedString(node, nameof(node.DisplayName));
 
                 _log.Information("Category code: " + node.Code);
 

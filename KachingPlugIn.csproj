@@ -47,6 +47,7 @@
     <Compile Include="KachingPlugIn\Models\DimensionValue.cs" />
     <Compile Include="KachingPlugIn\Models\FieldMappingConfiguration.cs" />
     <Compile Include="KachingPlugIn\Models\Folder.cs" />
+    <Compile Include="KachingPlugIn\Models\L10nStringConverter.cs" />
     <Compile Include="KachingPlugIn\Models\MarketPriceConverter.cs" />
     <Compile Include="KachingPlugIn\Models\PriceUnit.cs" />
     <Compile Include="KachingPlugIn\Models\Product.cs" />
