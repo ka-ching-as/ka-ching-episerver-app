@@ -34,7 +34,7 @@
                 <h3>Perform full product export</h3>
                 if (Model.ProductExportStartButtonDisabled)
                 {
-                    <p><em>Attention:</em> Requires valid products import URL. Find the URL in <a href="https://backoffice.ka-ching.dk" target="_blank">Ka-ching Backoffice</a></p>
+                    <p><em>Attention:</em> Requires valid products import URL. Find the URL in <a href="https://backoffice.ka-ching.dk" target="_blank">Ka-ching Backoffice</a> and configure it in your web.config in the <code>kaching</code> section</p>
                 }
                 <button type="submit" onclick="scheduleReloadProgressElement();" disabled='@(Model.ProductExportStartButtonDisabled)'>Start</button>
             }
@@ -47,7 +47,7 @@
                 <h3>Perform full category export</h3>
                 if (Model.CategoryExportStartButtonDisabled)
                 {
-                    <p><em>Attention:</em> Requires valid tags and folders import URLs. Find the URLs in <a href="https://backoffice.ka-ching.dk" target="_blank">Ka-ching Backoffice</a></p>
+    <p><em>Attention:</em> Requires valid tags and folders import URLs. Find the URLs in <a href="https://backoffice.ka-ching.dk" target="_blank">Ka-ching Backoffice</a> and configure it in your web.config in the <code>kaching</code> section</p>
                 }
                 <button type="submit" onclick="scheduleReloadProgressElement();" disabled='@(Model.CategoryExportStartButtonDisabled)'>Start</button>
             }
