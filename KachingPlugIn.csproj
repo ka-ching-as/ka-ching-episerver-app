@@ -64,6 +64,13 @@
     <Compile Include="KachingPlugIn\Services\ProductExportSingleton.cs" />
     <Compile Include="KachingPlugIn\ViewModels\PlugInViewModel.cs" />
     <Compile Include="KachingPlugIn\ViewModels\ProgressViewModel.cs" />
+    <Compile Include="Owin\KachingApiAuthenticationExtensions.cs" />
+    <Compile Include="Owin\KachingApiAuthenticationHandler.cs" />
+    <Compile Include="Owin\KachingApiAuthenticationMiddleware.cs" />
+    <Compile Include="Owin\KachingApiAuthenticationOptions.cs" />
+    <Compile Include="Owin\KachingApiAuthenticationProvider.cs" />
+    <Compile Include="Owin\KachingApiDefaults.cs" />
+    <Compile Include="Owin\KachingApiValidateIdentityContext.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
