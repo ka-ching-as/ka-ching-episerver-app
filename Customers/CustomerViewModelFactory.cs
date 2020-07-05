@@ -22,7 +22,7 @@ namespace KachingPlugIn.Customers
 
                 var viewModel = new CustomerViewModel
                 {
-                    Identifier = contact.Email,
+                    Identifier = contact.PrimaryKeyId.ToString(),
                     Name = contact.FullName,
                     Street = shippingAddress?.Line1 +
                              (!string.IsNullOrWhiteSpace(shippingAddress?.Line2) ? ", "+ shippingAddress.Line2 : null),
