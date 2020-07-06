@@ -1,9 +1,11 @@
 ﻿using System.Collections.Generic;
 using System.Web.Http;
+using KachingPlugIn.Owin;
 using Mediachase.Commerce.Customers;
 
 namespace KachingPlugIn.Customers
 {
+    [HostAuthentication(KachingApiDefaults.AuthenticationType)]
     [Authorize(Roles = "Kaching")]
     public class CustomerLookupController : ApiController
     {

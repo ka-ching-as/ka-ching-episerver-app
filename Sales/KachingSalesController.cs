@@ -5,10 +5,12 @@ using System.Net;
 using System.Web.Http;
 using EPiServer.Commerce.Order;
 using EPiServer.Logging;
+using KachingPlugIn.Owin;
 
 namespace KachingPlugIn.Sales
 {
-    //[Authorize(Roles = "Administrator,Administrators,Kaching")]
+    [HostAuthentication(KachingApiDefaults.AuthenticationType)]
+    [Authorize(Roles = "Kaching")]
     public class SalesController : ApiController
     {
         private static readonly ILogger Logger = LogManager.GetLogger(typeof(SalesController));
