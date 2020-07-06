@@ -16,6 +16,9 @@ namespace KachingPlugIn.Sales
         [JsonProperty("base_price")]
         public decimal BasePrice { get; set; }
 
+        [JsonProperty("behavior")]
+        public SaleBehaviorViewModel Behavior { get; set; }
+
         [JsonProperty("cost_price")]
         public decimal CostPrice { get; set; }
 
@@ -57,6 +60,9 @@ namespace KachingPlugIn.Sales
 
         [JsonProperty("sub_total")]
         public decimal Subtotal { get; set; }
+        
+        [JsonProperty("stock_location_id")]
+        public string StockLocationId { get; set; }
 
         [JsonProperty("tags")]
         public ICollection<string> Tags { get; set; }

@@ -72,6 +72,7 @@
     <Compile Include="Sales\DefaultKachingOrderNumberGenerator.cs" />
     <Compile Include="Sales\IKachingOrderNumberGenerator.cs" />
     <Compile Include="Sales\ISaleFactory.cs" />
+    <Compile Include="Sales\SaleBehaviorViewModel.cs" />
     <Compile Include="Sales\SaleCustomerViewModel.cs" />
     <Compile Include="Sales\SaleDimensionValueViewModel.cs" />
     <Compile Include="Sales\SaleDimensionViewModel.cs" />
@@ -82,6 +83,9 @@
     <Compile Include="Sales\SalePaymentViewModel.cs" />
     <Compile Include="Sales\KachingSalesController.cs" />
     <Compile Include="Sales\DefaultSaleFactory.cs" />
+    <Compile Include="Sales\SaleShippingAddressViewModel.cs" />
+    <Compile Include="Sales\SaleShippingCustomerViewModel.cs" />
+    <Compile Include="Sales\SaleShippingViewModel.cs" />
     <Compile Include="Sales\SaleSourceViewModel.cs" />
     <Compile Include="Sales\SaleSummaryViewModel.cs" />
     <Compile Include="Sales\SaleTaxViewModel.cs" />
