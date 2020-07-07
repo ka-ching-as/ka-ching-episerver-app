@@ -70,18 +70,35 @@ namespace KachingPlugIn.Sales
             PopulateMetaFields(purchaseOrder, orderForm, market, kachingSale);
             SetCashier(orderForm, kachingSale);
 
-            IShipment shipment = CreateShipment(purchaseOrder, customerContact, kachingSale);
-            PopulateMetaFields(shipment, market, kachingSale);
-            SetCashier(shipment, kachingSale);
+            orderForm.Shipments.Clear();
 
-            foreach (var kachingLineItem in kachingSale.Summary.LineItems)
+            foreach (var groupedLineItems in kachingSale.Summary
+                .LineItems
+                .GroupBy(li => li.EcomId))
             {
-                ILineItem lineItem = CreateLineItem(purchaseOrder, shipment, kachingSale, kachingLineItem);
+                var kachingShipping = groupedLineItems
+                    .Select(li => li.Behavior?.Shipping)
+                    .FirstOrDefault(s => s != null);
 
-                PopulateMetaFields(lineItem, market, kachingSale, kachingLineItem);
-                SetCashier(lineItem, kachingSale);
+                IShipment shipment = CreateShipment(
+                    purchaseOrder,
+                    orderForm,
+                    customerContact,
+                    kachingShipping,
+                    kachingSale);
+                orderForm.Shipments.Add(shipment);
 
-                shipment.LineItems.Add(lineItem);
+                PopulateMetaFields(shipment, market, kachingShipping, kachingSale);
+                SetCashier(shipment, kachingSale);
+
+                foreach (var kachingLineItem in groupedLineItems)
+                {
+                    ILineItem lineItem = CreateLineItem(purchaseOrder, shipment, kachingSale, kachingLineItem);
+                    shipment.LineItems.Add(lineItem);
+
+                    PopulateMetaFields(lineItem, market, kachingSale, kachingLineItem);
+                    SetCashier(lineItem, kachingSale);
+                }
             }
 
             IPayment cashPayment = null;
@@ -89,8 +106,8 @@ namespace KachingPlugIn.Sales
             {
                 switch (kachingPayment.PaymentType)
                 {
-                    // If the cash payment has cashback and/or rounding, adjust the cash payment amount.
-                    // Cashback occurs when, for example, a customer pays for 120 DKK with 150 DKK in cash,
+                    // If the cash payment has cash-back and/or rounding, adjust the cash payment amount.
+                    // Cash-back occurs when, for example, a customer pays for 120 DKK with 150 DKK in cash,
                     // and gets 30 DKK back from the merchant. Episerver does not need this information separately,
                     // so here we adjusts the cash payment entity with all corrections.
                     case "cash.cashback" when cashPayment != null:
@@ -104,7 +121,7 @@ namespace KachingPlugIn.Sales
                 {
                     cashPayment = payment;
                 }
-                
+
                 PopulateMetaFields(payment, market, kachingSale, kachingPayment);
                 SetCashier(payment, kachingSale);
 
@@ -188,33 +205,15 @@ namespace KachingPlugIn.Sales
 
         protected virtual IShipment CreateShipment(
             IPurchaseOrder purchaseOrder,
+            IOrderForm orderForm,
             CustomerContact customerContact,
+            SaleShippingViewModel kachingShipping,
             SaleViewModel kachingSale)
         {
-            SaleCustomerViewModel kachingCustomer = kachingSale.Summary.Customer;
-            IShipment shipment = purchaseOrder.GetFirstShipment();
-
-            // By default, use the shipping address supplied by Ka-ching.
-            // Override this method if you need to use the customer's registered address.
-            if (kachingCustomer == null)
-            {
-                return shipment;
-            }
-
-            int lastNameIndex = kachingCustomer.Name.LastIndexOf(' ');
-            string firstName = kachingCustomer.Name.Substring(0, lastNameIndex-1);
-            string lastName = kachingCustomer.Name.Substring(lastNameIndex, kachingCustomer.Name.Length - lastNameIndex);
-
-            IOrderAddress shippingAddress = _orderGroupFactory.CreateOrderAddress(purchaseOrder);
-            shippingAddress.FirstName = firstName;
-            shippingAddress.LastName = lastName;
-            shippingAddress.Line1 = kachingCustomer.Street;
-            shippingAddress.PostalCode = kachingCustomer.PostalCode;
-            shippingAddress.City = kachingCustomer.City;
-            shippingAddress.CountryName = kachingCustomer.Country;
-            shippingAddress.CountryCode = kachingCustomer.CountryCode;
-            shippingAddress.DaytimePhoneNumber = kachingCustomer.Phone;
-            shippingAddress.Email = kachingCustomer.Email;
+            IShipment shipment = _orderGroupFactory.CreateShipment(purchaseOrder);
+            shipment.OrderShipmentStatus = kachingShipping != null
+                ? OrderShipmentStatus.AwaitingInventory
+                : OrderShipmentStatus.Shipped;
 
             return shipment;
         }
@@ -276,8 +275,65 @@ namespace KachingPlugIn.Sales
         protected virtual void PopulateMetaFields(
             IShipment shipment,
             IMarket market,
+            SaleShippingViewModel kachingShipping,
             SaleViewModel kachingSale)
         {
+            // By default, use the shipping address supplied by Ka-ching.
+            // Override this method if you need to use the customer's registered address.
+            if (kachingShipping?.Address != null)
+            {
+                shipment.ShippingAddress = ConvertToAddress(shipment.ParentOrderGroup, kachingShipping);
+            }
+            else if (kachingSale.Summary?.Customer != null)
+            {
+                shipment.ShippingAddress = ConvertToAddress(shipment.ParentOrderGroup, kachingSale.Summary.Customer);
+            }
+        }
+
+        protected virtual IOrderAddress ConvertToAddress(
+            IOrderGroup orderGroup,
+            SaleShippingViewModel shipping)
+        {
+            if (shipping == null)
+            {
+                return null;
+            }
+
+            var orderAddress = _orderGroupFactory.CreateOrderAddress(orderGroup);
+            orderAddress.Id = "Shipping";
+            orderAddress.City = shipping.Address.City;
+            orderAddress.CountryCode = shipping.Address.CountryCode;
+            orderAddress.CountryName = shipping.Address.Country;
+            orderAddress.DaytimePhoneNumber = shipping.CustomerInfo.Phone;
+            orderAddress.Email = shipping.CustomerInfo.Email;
+            orderAddress.FirstName = shipping.Address.Name;
+            orderAddress.Line1 = shipping.Address.Street;
+            orderAddress.PostalCode = shipping.Address.PostalCode;
+
+            return orderAddress;
+        }
+
+        protected virtual IOrderAddress ConvertToAddress(
+            IOrderGroup orderGroup,
+            SaleCustomerViewModel customer)
+        {
+            if (customer == null)
+            {
+                return null;
+            }
+
+            var orderAddress = _orderGroupFactory.CreateOrderAddress(orderGroup);
+            orderAddress.Id = "Shipping";
+            orderAddress.City = customer.City;
+            orderAddress.CountryCode = customer.CountryCode;
+            orderAddress.CountryName = customer.Country;
+            orderAddress.DaytimePhoneNumber = customer.Phone;
+            orderAddress.Email = customer.Email;
+            orderAddress.FirstName = customer.Name;
+            orderAddress.Line1 = customer.Street;
+            orderAddress.PostalCode = customer.PostalCode;
+
+            return orderAddress;
         }
 
         /// <summary>
