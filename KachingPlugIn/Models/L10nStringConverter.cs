@@ -12,6 +12,12 @@ namespace KachingPlugIn.Models
             L10nString value,
             JsonSerializer serializer)
         {
+            if (value == null)
+            {
+                writer.WriteNull();
+                return;
+            }
+
             if (value.Localized != null)
             {
                 serializer.Serialize(writer, value.Localized);
