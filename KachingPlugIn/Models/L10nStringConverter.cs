@@ -29,25 +29,17 @@ namespace KachingPlugIn.Models
             bool hasExistingValue,
             JsonSerializer serializer)
         {
+            if (reader.TokenType == JsonToken.Null)
+            {
+                return null;
+            }
+
             switch (reader.TokenType)
             {
                 case JsonToken.String:
-                    return new L10nString(reader.ReadAsString());
+                    return new L10nString((string) reader.Value);
                 case JsonToken.StartObject:
-                    var localized = new Dictionary<string, string>();
-
-                    do
-                    {
-                        // Read the property name and property value.
-                        reader.Read();
-                        string key = (string)reader.Value;
-                        string value = reader.ReadAsString();
-
-                        localized.Add(key, value);
-                    } while (reader.TokenType == JsonToken.PropertyName);
-
-                    // Explicitly read the EndObject token.
-                    reader.Read();
+                    var localized = serializer.Deserialize<IDictionary<string, string>>(reader);
 
                     return new L10nString(localized);
                 default:
