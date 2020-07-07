@@ -52,6 +52,7 @@
     <Compile Include="KachingPlugIn\Models\MarketPriceConverter.cs" />
     <Compile Include="KachingPlugIn\Models\PriceUnit.cs" />
     <Compile Include="KachingPlugIn\Models\Product.cs" />
+    <Compile Include="KachingPlugIn\Models\ProductAsset.cs" />
     <Compile Include="KachingPlugIn\Models\Tag.cs" />
     <Compile Include="KachingPlugIn\Models\L10nString.cs" />
     <Compile Include="KachingPlugIn\Models\MarketPrice.cs" />

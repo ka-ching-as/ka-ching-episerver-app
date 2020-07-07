@@ -226,6 +226,38 @@ namespace KachingPlugIn.Factories
             return kachingProduct;
         }
 
+        public IEnumerable<ProductAsset> BuildKaChingProductAssets(EntryContentBase entryContent)
+        {
+            foreach (CommerceMedia media in entryContent.CommerceMediaCollection)
+            {
+                MediaData mediaData = _contentLoader.Get<MediaData>(media.AssetLink);
+                Uri absoluteUrl = GetAbsoluteUrl(media.AssetLink);
+
+                string mimeType;
+                switch (mediaData.MimeType)
+                {
+                    case "application/pdf":
+                        mimeType = "document/pdf";
+                        break;
+                    case "image/jpeg":
+                    case "image/png":
+                        mimeType = mediaData.MimeType;
+                        break;
+                    default:
+                        continue;
+                }
+
+                var asset = new ProductAsset
+                {
+                    MimeType = mimeType,
+                    Name = new L10nString(mediaData.Name),
+                    Url = absoluteUrl.ToString()
+                };
+
+                yield return asset;
+            }
+        }
+
         public ProductMetadata ProductMetadata()
         {
             var markets = _marketService.GetAllMarkets();
