@@ -11,6 +11,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
+using AuthorizeNet.Api.Contracts.V1;
 using KachingPlugIn.Configuration;
 using KachingPlugIn.KachingPlugIn.Models;
 
@@ -57,6 +58,7 @@ namespace KachingPlugIn.Services
                 try
                 {
                     ExportAllProducts(url);
+                    ExportAllProductAssets();
                 }
                 catch (WebException e)
                 {
@@ -205,6 +207,47 @@ namespace KachingPlugIn.Services
             ResetState(false);
         }
 
+        private void ExportAllProductAssets()
+        {
+            var assets = new Dictionary<string, IEnumerable<ProductAsset>>();
+            var entriesWithoutAssets = new List<string>();
+
+            var root = _contentLoader.GetChildren<CatalogContent>(_referenceConverter.GetRootLink());
+            BuildKachingProductAssets(root.FirstOrDefault(), assets, entriesWithoutAssets);
+
+            if (assets.Count == 0)
+            {
+                return;
+            }
+
+            if (!_configuration.ProductAssetsImportUrl.IsValidProductAssetsImportUrl())
+            {
+                return;
+            }
+
+            if (ExportState != null)
+            {
+                ExportState.Total = assets.Count;
+            }
+
+            // Push assets groups for products that have assets.
+            foreach (var batch in assets.Batch(BatchSize))
+            {
+                APIFacade.Post(
+                    new { assets = batch },
+                    _configuration.ProductAssetsImportUrl);
+            }
+
+            // Delete asset groups for products that have no assets (even if they do not exist in Ka-ching).
+            // This is to enforce no assets for products that have no assets, even if an individual deletion was missed earlier.
+            foreach (var batch in entriesWithoutAssets.Batch(BatchSize))
+            {
+                APIFacade.Delete(batch, _configuration.ProductAssetsImportUrl);
+            }
+
+            ResetState(false);
+        }
+
         private IList<Product> BuildKachingProducts(IEnumerable<NodeContent> nodes, IList<string> tags)
         {
             var configuration = KachingConfiguration.Instance;
@@ -241,6 +284,41 @@ namespace KachingPlugIn.Services
             }
 
             return kachingProducts;
+        }
+
+        private void BuildKachingProductAssets(
+            NodeContentBase node,
+            IDictionary<string, IEnumerable<ProductAsset>> productAssets,
+            ICollection<string> entriesWithoutAssets)
+        {
+            var children = _contentLoader.GetChildren<CatalogContentBase>(node.ContentLink);
+
+            foreach (var child in children)
+            {
+                switch (child)
+                {
+                    case NodeContent childNode:
+                        BuildKachingProductAssets(
+                            childNode,
+                            productAssets,
+                            entriesWithoutAssets);
+                        break;
+                    case ProductContent childEntry:
+                        ICollection<ProductAsset> assets = _productFactory.BuildKaChingProductAssets(childEntry);
+                        if (assets == null)
+                        {
+                            entriesWithoutAssets.Add(
+                                childEntry.Code.KachingCompatibleKey());
+                        }
+                        else
+                        {
+                            productAssets.Add(
+                                childEntry.Code.KachingCompatibleKey(),
+                                assets);
+                        }
+                        break;
+                }
+            }
         }
 
         private IList<string> TagsForProduct(ProductContent product)

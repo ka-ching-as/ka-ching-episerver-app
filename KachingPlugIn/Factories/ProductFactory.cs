@@ -3,20 +3,22 @@ using EPiServer.Commerce.Catalog.ContentTypes;
 using EPiServer.Commerce.Catalog.Linking;
 using EPiServer.Commerce.SpecializedProperties;
 using EPiServer.Core;
+using EPiServer.Logging;
+using EPiServer.Web;
 using EPiServer.Web.Routing;
 using KachingPlugIn.Configuration;
 using KachingPlugIn.Helpers;
+using KachingPlugIn.KachingPlugIn;
+using KachingPlugIn.KachingPlugIn.Models;
 using KachingPlugIn.Models;
+using Mediachase.Commerce;
 using Mediachase.Commerce.Catalog;
 using Mediachase.Commerce.Markets;
 using Mediachase.Commerce.Pricing;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
-using EPiServer.Web;
-using EPiServer.Logging;
-using KachingPlugIn.KachingPlugIn.Models;
-using Mediachase.Commerce;
 
 namespace KachingPlugIn.Factories
 {
@@ -226,12 +228,35 @@ namespace KachingPlugIn.Factories
             return kachingProduct;
         }
 
-        public IEnumerable<ProductAsset> BuildKaChingProductAssets(EntryContentBase entryContent)
+        public ICollection<ProductAsset> BuildKaChingProductAssets(EntryContentBase entryContent)
         {
-            foreach (CommerceMedia media in entryContent.CommerceMediaCollection)
+            if (entryContent.CommerceMediaCollection == null ||
+                entryContent.CommerceMediaCollection.Count == 0)
             {
-                MediaData mediaData = _contentLoader.Get<MediaData>(media.AssetLink);
-                Uri absoluteUrl = GetAbsoluteUrl(media.AssetLink);
+                return null;
+            }
+
+            var assets = new List<ProductAsset>(entryContent.CommerceMediaCollection.Count);
+
+            // Load all media assets in one go, for the particular catalog entry.
+            IDictionary<ContentReference, MediaData> mediaByContentLink = _contentLoader
+                .GetItems(
+                    entryContent.CommerceMediaCollection
+                        .Distinct(CommerceMediaComparer.Default)
+                        .Select(x => x.AssetLink),
+                    CultureInfo.InvariantCulture)
+                .OfType<MediaData>()
+                .ToDictionary(x => x.ContentLink);
+
+            foreach (CommerceMedia commerceMedia in entryContent.CommerceMediaCollection)
+            {
+                // Look up the referenced asset from the pre-loaded media assets.
+                if (!mediaByContentLink.TryGetValue(commerceMedia.AssetLink, out MediaData mediaData))
+                {
+                    continue;
+                }
+
+                Uri absoluteUrl = GetAbsoluteUrl(commerceMedia.AssetLink);
 
                 string mimeType;
                 switch (mediaData.MimeType)
@@ -254,8 +279,10 @@ namespace KachingPlugIn.Factories
                     Url = absoluteUrl.ToString()
                 };
 
-                yield return asset;
+                assets.Add(asset);
             }
+
+            return assets;
         }
 
         public ProductMetadata ProductMetadata()
