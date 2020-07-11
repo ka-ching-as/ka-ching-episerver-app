@@ -37,6 +37,7 @@
     <Compile Include="Configuration\SystemMappingElement.cs" />
     <Compile Include="EnumerableExtensions.cs" />
     <Compile Include="KachingPlugIn\Controllers\KachingPlugInController.cs" />
+    <Compile Include="KachingPlugIn\EventHandlers\AssociationsEventHandler.cs" />
     <Compile Include="KachingPlugIn\EventHandlers\CatalogEventHandler.cs" />
     <Compile Include="KachingPlugIn\Factories\ProductFactory.cs" />
     <Compile Include="KachingPlugIn\Factories\L10nStringFactory.cs" />
