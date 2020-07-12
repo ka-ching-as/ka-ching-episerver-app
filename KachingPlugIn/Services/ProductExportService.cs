@@ -1,18 +1,19 @@
 ﻿using EPiServer;
 using EPiServer.Commerce.Catalog.ContentTypes;
+using EPiServer.Commerce.Catalog.Linking;
 using EPiServer.Core;
 using EPiServer.Logging;
+using KachingPlugIn.Configuration;
 using KachingPlugIn.Factories;
 using KachingPlugIn.Helpers;
 using KachingPlugIn.Models;
 using Mediachase.Commerce.Catalog;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
-using AuthorizeNet.Api.Contracts.V1;
-using KachingPlugIn.Configuration;
 using KachingPlugIn.KachingPlugIn.Models;
 
 namespace KachingPlugIn.Services
@@ -20,6 +21,8 @@ namespace KachingPlugIn.Services
     public class ProductExportService
     {
         private const int BatchSize = 1000;
+        private readonly IAssociationRepository _associationRepository;
+        private readonly GroupDefinitionRepository<AssociationGroupDefinition> _associationGroupRepository;
         private readonly ReferenceConverter _referenceConverter;
         private readonly KachingConfiguration _configuration;
         private readonly IContentLoader _contentLoader;
@@ -30,11 +33,15 @@ namespace KachingPlugIn.Services
         public IExportState ExportState { get; set; }
 
         public ProductExportService(
+            IAssociationRepository associationRepository,
+            GroupDefinitionRepository<AssociationGroupDefinition> associationGroupRepository,
             ReferenceConverter referenceConverter,
             IContentLoader contentLoader,
             IContentVersionRepository contentVersionRepository,
             ProductFactory productFactory)
         {
+            _associationRepository = associationRepository;
+            _associationGroupRepository = associationGroupRepository;
             _referenceConverter = referenceConverter;
             _configuration = KachingConfiguration.Instance;
             _contentLoader = contentLoader;
@@ -59,6 +66,9 @@ namespace KachingPlugIn.Services
                 {
                     ExportAllProducts(url);
                     ExportAllProductAssets();
+                    ExportAllProductRecommendations();
+
+                    ResetState(false);
                 }
                 catch (WebException e)
                 {
@@ -106,7 +116,10 @@ namespace KachingPlugIn.Services
             var ids = products.Select(p => p.Id).ToArray();
             APIFacade.Delete(ids, url);
 
+            // When deleting category entries, tell Ka-ching to delete all outgoing product recommendations for the entries.
+            // If any of those entries actually have no recommendations, Ka-ching will silently ignore those deletions.
             DeleteProductAssets(ids);
+            DeleteProductRecommendations(ids);
         }
 
         public void DeleteProductAssets(ICollection<string> entryCodes)
@@ -155,6 +168,39 @@ namespace KachingPlugIn.Services
             }
         }
 
+        public void DeleteProductRecommendations(EntryContentBase entry)
+        {
+            DeleteProductRecommendations(new[] { entry.Code.KachingCompatibleKey() });
+        }
+
+        public void DeleteProductRecommendations(ICollection<string> entryCodes)
+        {
+            if (entryCodes == null ||
+                entryCodes.Count == 0)
+            {
+                return;
+            }
+
+            if (!_configuration.ProductRecommendationsImportUrl.IsValidProductRecommendationsImportUrl())
+            {
+                return;
+            }
+
+            // For each known association group, tell Ka-ching to delete all outgoing associations for the specified products.
+            // We are doing it this way, because the import queue expects to be told which recommendation category
+            // to delete associations from. Deleting a catalog entry from Episerver, affects all recommendation categories.
+            foreach (var associationGroup in _associationGroupRepository.List())
+            {
+                // Do the deletion in batches.
+                foreach (var batch in entryCodes.Batch(BatchSize))
+                {
+                    APIFacade.Delete(
+                        batch,
+                        _configuration.ProductRecommendationsImportUrl + "&recommendation_id=" + associationGroup.Name.KachingCompatibleKey());
+                }
+            }
+        }
+
         public void ExportProduct(ProductContent product, string deletedVariantCode, string url)
         {
             var configuration = KachingConfiguration.Instance;
@@ -175,6 +221,108 @@ namespace KachingPlugIn.Services
             var products = new List<Product>();
             products.Add(kachingProduct);
             PostKachingProducts(products, url);
+        }
+
+        public void ExportAllProductRecommendations()
+        {
+            var catalog = _contentLoader
+                .GetChildren<CatalogContent>(_referenceConverter.GetRootLink())
+                .FirstOrDefault();
+            if (catalog == null)
+            {
+                return;
+            }
+
+            ExportProductRecommendations(catalog);
+        }
+
+        public void ExportProductRecommendations(EntryContentBase entry)
+        {
+            ExportProductRecommendations(new[] { entry.ContentLink });
+        }
+
+        public void ExportProductRecommendations(NodeContentBase node)
+        {
+            if (node == null)
+            {
+                return;
+            }
+
+            if (!_configuration.ProductRecommendationsImportUrl.IsValidProductRecommendationsImportUrl())
+            {
+                return;
+            }
+
+            IEnumerable<ContentReference> descendentRefs = _contentLoader
+                .GetDescendents(node.ContentLink);
+
+            IEnumerable<ContentReference> entryRefs = _contentLoader
+                .GetItems(descendentRefs, CultureInfo.InvariantCulture)
+                .OfType<EntryContentBase>()
+                .Select(c => c.ContentLink);
+
+            ExportProductRecommendations(entryRefs);
+        }
+
+        public void ExportProductRecommendations(IEnumerable<ContentReference> entryLinks)
+        {
+            if (!_configuration.ProductRecommendationsImportUrl.IsValidProductRecommendationsImportUrl())
+            {
+                return;
+            }
+
+            var allAssociations = new List<Association>();
+            var entryLinksToDelete = new HashSet<ContentReference>(ContentReferenceComparer.IgnoreVersion);
+
+            foreach (ContentReference entryLink in entryLinks
+                .Distinct(ContentReferenceComparer.IgnoreVersion))
+            {
+                var associations = (ICollection<Association>)_associationRepository.GetAssociations(entryLink);
+                 if (associations.Count == 0)
+                {
+                    entryLinksToDelete.Add(entryLink);
+                }
+                else
+                {
+                    allAssociations.AddRange(associations);
+                }
+            }
+
+            foreach (var associationsByGroup in allAssociations
+                .GroupBy(a => a.Group.Name))
+            {
+                var recommendationGroups = associationsByGroup
+                    .GroupBy(a => a.Source)
+                    .Select(g => _productFactory.BuildKaChingRecommendationGroup(g.Key, g.ToArray()))
+                    .Where(x => x != null);
+
+                foreach (var group in recommendationGroups
+                    .Batch(BatchSize))
+                {
+                    APIFacade.Post(
+                        new { products = group },
+                        _configuration.ProductRecommendationsImportUrl + "&recommendation_id=" + associationsByGroup.Key.KachingCompatibleKey());
+                }
+            }
+
+            if (entryLinksToDelete.Count == 0)
+            {
+                return;
+            }
+
+            foreach (var associationGroup in _associationGroupRepository.List())
+            {
+                foreach (var batch in _contentLoader
+                    .GetItems(entryLinksToDelete, CultureInfo.InvariantCulture)
+                    .OfType<EntryContentBase>()
+                    .Select(c => c.Code.KachingCompatibleKey())
+                    .Batch(BatchSize))
+                {
+                    APIFacade.DeleteObject(
+                        batch,
+                        _configuration.ProductRecommendationsImportUrl + "&recommendation_id=" + associationGroup.Name.KachingCompatibleKey());
+                }
+            }
         }
 
         public void ExportChildProducts(NodeContent category, string url)
@@ -203,8 +351,6 @@ namespace KachingPlugIn.Services
             }
 
             PostKachingProducts(products, url);
-
-            ResetState(false);
         }
 
         private void ExportAllProductAssets()

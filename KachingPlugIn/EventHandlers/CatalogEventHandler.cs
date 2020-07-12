@@ -94,6 +94,7 @@ namespace KachingPlugIn.EventHandlers
                     var product = content as ProductContent;
                     _log.Information("Ka-ching event handler processing product deleting: " + product.Code);
                     HandleProductChange(product, true);
+                    _productExportService.DeleteProductRecommendations(product);
                 }
                 else if (content is NodeContent)
                 {
@@ -157,12 +158,14 @@ namespace KachingPlugIn.EventHandlers
                     var product = content as ProductContent;
                     _log.Information("Ka-ching event handler processing product publish: " + product.Code);
                     HandleProductChange(product, false);
+                    _productExportService.ExportProductRecommendations(product);
                 }
                 else if (content is NodeContent)
                 {
                     var node = content as NodeContent;
                     _log.Information("Ka-ching event handler processing category publish: " + node.Code);
                     HandleCategoryChange(node, ChangeType.Published);
+                    _productExportService.ExportProductRecommendations(node);
                 }
             }
             catch (Exception ex)
@@ -222,6 +225,7 @@ namespace KachingPlugIn.EventHandlers
             {
                 _productExportService.DeleteProduct(product, configuration.ProductsImportUrl);
                 _productExportService.DeleteProductAssets(new[] {product.Code.KachingCompatibleKey()});
+                _productExportService.DeleteProductRecommendations(new[] { product.Code.KachingCompatibleKey() });
             }
             else
             {
@@ -251,7 +255,7 @@ namespace KachingPlugIn.EventHandlers
             _log.Information("HandleCategoryChange - type: " + changeType + " code: " + node.Code);
             // Make sure we have valid import endpoints configured before handling the change
             var configuration = KachingConfiguration.Instance;
-            if (!configuration.TagsImportUrl.IsValidTagsImportUrl() || 
+            if (!configuration.TagsImportUrl.IsValidTagsImportUrl() ||
                 !configuration.FoldersImportUrl.IsValidFoldersImportUrl() ||
                 !configuration.ProductsImportUrl.IsValidProductsImportUrl())
             {

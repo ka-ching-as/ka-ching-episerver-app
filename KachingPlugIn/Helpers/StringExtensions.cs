@@ -4,6 +4,9 @@ namespace KachingPlugIn.Helpers
 {
     public static class StringExtensions
     {
+        /// <summary>
+        /// Returns a key that is safe to import in Ka-ching, by lower-casing the key and replacing certain characters.
+        /// </summary>
         public static string KachingCompatibleKey(this string key)
         {
             return key.
@@ -21,6 +24,11 @@ namespace KachingPlugIn.Helpers
         public static bool IsValidProductAssetsImportUrl(this string url)
         {
             return IsValidUrl(url, "product_assets");
+        }
+
+        public static bool IsValidProductRecommendationsImportUrl(this string url)
+        {
+            return IsValidUrl(url, "recommendations");
         }
 
         public static bool IsValidProductsImportUrl(this string url)
@@ -46,23 +54,30 @@ namespace KachingPlugIn.Helpers
                 return false;
             }
 
-            Uri uriResult;
-            if (Uri.TryCreate(url, UriKind.Absolute, out uriResult))
+            if (!Uri.TryCreate(url, UriKind.Absolute, out Uri uriResult))
             {
-                var https = uriResult.Scheme == Uri.UriSchemeHttps;
-                var validHost = IsValidHost(uriResult.Host);
-                var validPath = uriResult.LocalPath == "/imports/" + path;
-                return https && validHost && validPath;
+                return false;
             }
-            return false;
+
+            var https = uriResult.Scheme == Uri.UriSchemeHttps;
+            var validHost = IsValidHost(uriResult.Host);
+            var validPath = uriResult.LocalPath == "/imports/" + path;
+
+            return https && validHost && validPath;
         }
 
         private static bool IsValidHost(string host)
         {
-            return host == "us-central1-ka-ching-base-dev.cloudfunctions.net" ||
-                host == "us-central1-ka-ching-base-test.cloudfunctions.net" ||
-                host == "us-central1-ka-ching-base-staging.cloudfunctions.net" ||
-                host == "us-central1-ka-ching-base.cloudfunctions.net";
+            switch (host)
+            {
+                case "us-central1-ka-ching-base-dev.cloudfunctions.net":
+                case "us-central1-ka-ching-base-test.cloudfunctions.net":
+                case "us-central1-ka-ching-base-staging.cloudfunctions.net":
+                case "us-central1-ka-ching-base.cloudfunctions.net":
+                    return true;
+                default:
+                    return false;
+            }
         }
     }
 }
