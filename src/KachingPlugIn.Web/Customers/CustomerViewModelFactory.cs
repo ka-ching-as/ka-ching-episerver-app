@@ -3,7 +3,7 @@ using System.Linq;
 using EPiServer.ServiceLocation;
 using Mediachase.Commerce.Customers;
 
-namespace KachingPlugIn.Customers
+namespace KachingPlugIn.Web.Customers
 {
     [ServiceConfiguration(typeof(CustomerViewModelFactory))]
     public class CustomerViewModelFactory

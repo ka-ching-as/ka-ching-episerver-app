@@ -5,7 +5,7 @@ using Microsoft.Owin.Logging;
 using Microsoft.Owin.Security.Infrastructure;
 using Owin;
 
-namespace KachingPlugIn.Owin
+namespace KachingPlugIn.Web.Owin
 {
     public class KachingApiAuthenticationMiddleware : AuthenticationMiddleware<KachingApiAuthenticationOptions>
     {

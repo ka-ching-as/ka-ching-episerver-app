@@ -1,6 +1,6 @@
 ﻿using EPiServer.ServiceLocation;
 
-namespace KachingPlugIn.Sales
+namespace KachingPlugIn.Web.Sales
 {
     /// <summary>
     /// Default order number generator for orders coming from Ka-ching to Episerver.

@@ -1,6 +1,6 @@
 ﻿using Microsoft.Owin.Security;
 
-namespace KachingPlugIn.Owin
+namespace KachingPlugIn.Web.Owin
 {
     public class KachingApiAuthenticationOptions : AuthenticationOptions
     {

@@ -1,6 +1,6 @@
 ﻿using Newtonsoft.Json;
 
-namespace KachingPlugIn.Sales
+namespace KachingPlugIn.Web.Sales
 {
     public class SaleShippingCustomerViewModel
     {

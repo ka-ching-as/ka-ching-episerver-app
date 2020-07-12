@@ -1,6 +1,6 @@
 ﻿using EPiServer.Commerce.Order;
 
-namespace KachingPlugIn.Sales
+namespace KachingPlugIn.Web.Sales
 {
     public interface ISaleFactory
     {

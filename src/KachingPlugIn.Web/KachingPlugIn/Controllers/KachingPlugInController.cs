@@ -1,16 +1,16 @@
-﻿using EPiServer.Logging;
+﻿using System;
+using System.Web.Mvc;
+using EPiServer.Logging;
 using EPiServer.PlugIn;
 using EPiServer.Security;
 using EPiServer.Shell;
 using KachingPlugIn.Configuration;
 using KachingPlugIn.Helpers;
 using KachingPlugIn.Services;
-using KachingPlugIn.ViewModels;
-using System;
-using System.Web.Mvc;
+using KachingPlugIn.Web.KachingPlugIn.ViewModels;
 using PlugInArea = EPiServer.PlugIn.PlugInArea;
 
-namespace KachingPlugIn.Controllers
+namespace KachingPlugIn.Web.KachingPlugIn.Controllers
 {
     [GuiPlugIn(
         Area = PlugInArea.AdminMenu,

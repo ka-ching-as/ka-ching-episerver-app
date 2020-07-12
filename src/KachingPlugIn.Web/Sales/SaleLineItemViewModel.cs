@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using KachingPlugIn.Models;
 using Newtonsoft.Json;
 
-namespace KachingPlugIn.Sales
+namespace KachingPlugIn.Web.Sales
 {
     public class SaleLineItemViewModel
     {

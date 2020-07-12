@@ -1,9 +1,9 @@
 ﻿using System.Collections.Generic;
 using System.Web.Http;
-using KachingPlugIn.Owin;
+using KachingPlugIn.Web.Owin;
 using Mediachase.Commerce.Customers;
 
-namespace KachingPlugIn.Customers
+namespace KachingPlugIn.Web.Customers
 {
     [HostAuthentication(KachingApiDefaults.AuthenticationType)]
     [Authorize(Roles = "Kaching")]

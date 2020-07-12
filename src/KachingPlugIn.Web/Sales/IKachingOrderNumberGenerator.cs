@@ -1,4 +1,4 @@
-﻿namespace KachingPlugIn.Sales
+﻿namespace KachingPlugIn.Web.Sales
 {
     public interface IKachingOrderNumberGenerator
     {

@@ -5,9 +5,9 @@ using System.Net;
 using System.Web.Http;
 using EPiServer.Commerce.Order;
 using EPiServer.Logging;
-using KachingPlugIn.Owin;
+using KachingPlugIn.Web.Owin;
 
-namespace KachingPlugIn.Sales
+namespace KachingPlugIn.Web.Sales
 {
     [HostAuthentication(KachingApiDefaults.AuthenticationType)]
     [Authorize(Roles = "Kaching")]

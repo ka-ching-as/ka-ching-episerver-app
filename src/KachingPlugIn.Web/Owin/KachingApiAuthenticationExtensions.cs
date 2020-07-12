@@ -2,7 +2,7 @@
 using Microsoft.Owin.Extensions;
 using Owin;
 
-namespace KachingPlugIn.Owin
+namespace KachingPlugIn.Web.Owin
 {
     public static class KachingApiAuthenticationExtensions
     {

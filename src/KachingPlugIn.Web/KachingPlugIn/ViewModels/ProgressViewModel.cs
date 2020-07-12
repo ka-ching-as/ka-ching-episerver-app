@@ -1,4 +1,4 @@
-﻿namespace KachingPlugIn.ViewModels
+﻿namespace KachingPlugIn.Web.KachingPlugIn.ViewModels
 {
     public class ProgressViewModel
     {

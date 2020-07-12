@@ -1,6 +1,6 @@
 ﻿using Newtonsoft.Json;
 
-namespace KachingPlugIn.Customers
+namespace KachingPlugIn.Web.Customers
 {
     public class CustomerViewModel
     {

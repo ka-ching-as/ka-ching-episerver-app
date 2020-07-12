@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Threading.Tasks;
 
-namespace KachingPlugIn.Owin
+namespace KachingPlugIn.Web.Owin
 {
     public class KachingApiAuthenticationProvider
     {

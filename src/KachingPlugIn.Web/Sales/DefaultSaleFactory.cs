@@ -10,7 +10,7 @@ using Mediachase.Commerce.Markets;
 using Mediachase.Commerce.Orders;
 using Mediachase.MetaDataPlus;
 
-namespace KachingPlugIn.Sales
+namespace KachingPlugIn.Web.Sales
 {
     [ServiceConfiguration(typeof(ISaleFactory), Lifecycle = ServiceInstanceScope.Singleton)]
     public class DefaultSaleFactory : ISaleFactory
