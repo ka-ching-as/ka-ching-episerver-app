@@ -3,20 +3,22 @@ using EPiServer.Commerce.Catalog.ContentTypes;
 using EPiServer.Commerce.Catalog.Linking;
 using EPiServer.Commerce.SpecializedProperties;
 using EPiServer.Core;
+using EPiServer.Logging;
+using EPiServer.Web;
 using EPiServer.Web.Routing;
 using KachingPlugIn.Configuration;
 using KachingPlugIn.Helpers;
+using KachingPlugIn.KachingPlugIn;
+using KachingPlugIn.KachingPlugIn.Models;
 using KachingPlugIn.Models;
+using Mediachase.Commerce;
 using Mediachase.Commerce.Catalog;
 using Mediachase.Commerce.Markets;
 using Mediachase.Commerce.Pricing;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
-using EPiServer.Web;
-using EPiServer.Logging;
-using KachingPlugIn.KachingPlugIn.Models;
-using Mediachase.Commerce;
 
 namespace KachingPlugIn.Factories
 {
@@ -57,7 +59,7 @@ namespace KachingPlugIn.Factories
         {
             var kachingProduct = new Product();
 
-            kachingProduct.Id = product.Code;
+            kachingProduct.Id = product.Code.KachingCompatibleKey();
             kachingProduct.Barcode = GetPropertyStringValue(product, configuration.SystemMappings.BarcodeMetaField);
             kachingProduct.Name = _l10nStringFactory.GetLocalizedString(product, nameof(product.DisplayName));
             kachingProduct.Description = _l10nStringFactory.GetLocalizedString(product, configuration.SystemMappings.DescriptionMetaField);
@@ -129,7 +131,7 @@ namespace KachingPlugIn.Factories
                 // then put all variant properties on the product instead.
                 var variant = variants.First();
 
-                kachingProduct.Id = variant.Code;
+                kachingProduct.Id = variant.Code.KachingCompatibleKey();
                 kachingProduct.Barcode = GetPropertyStringValue(variant, configuration.SystemMappings.BarcodeMetaField);
                 kachingProduct.Name = _l10nStringFactory.GetLocalizedString(variant, nameof(variant.DisplayName));
 
@@ -170,7 +172,7 @@ namespace KachingPlugIn.Factories
                     }
 
                     var kachingVariant = new Variant();
-                    kachingVariant.Id = variant.Code;
+                    kachingVariant.Id = variant.Code.KachingCompatibleKey();
                     kachingVariant.Barcode = GetPropertyStringValue(variant, configuration.SystemMappings.BarcodeMetaField);
 
                     var variantName = _l10nStringFactory.GetLocalizedString(variant, nameof(variant.DisplayName));
@@ -224,6 +226,63 @@ namespace KachingPlugIn.Factories
             }
 
             return kachingProduct;
+        }
+
+        public ICollection<ProductAsset> BuildKaChingProductAssets(EntryContentBase entryContent)
+        {
+            if (entryContent.CommerceMediaCollection == null ||
+                entryContent.CommerceMediaCollection.Count == 0)
+            {
+                return null;
+            }
+
+            var assets = new List<ProductAsset>(entryContent.CommerceMediaCollection.Count);
+
+            // Load all media assets in one go, for the particular catalog entry.
+            IDictionary<ContentReference, MediaData> mediaByContentLink = _contentLoader
+                .GetItems(
+                    entryContent.CommerceMediaCollection
+                        .Distinct(CommerceMediaComparer.Default)
+                        .Select(x => x.AssetLink),
+                    CultureInfo.InvariantCulture)
+                .OfType<MediaData>()
+                .ToDictionary(x => x.ContentLink);
+
+            foreach (CommerceMedia commerceMedia in entryContent.CommerceMediaCollection)
+            {
+                // Look up the referenced asset from the pre-loaded media assets.
+                if (!mediaByContentLink.TryGetValue(commerceMedia.AssetLink, out MediaData mediaData))
+                {
+                    continue;
+                }
+
+                Uri absoluteUrl = GetAbsoluteUrl(commerceMedia.AssetLink);
+
+                string mimeType;
+                switch (mediaData.MimeType)
+                {
+                    case "application/pdf":
+                        mimeType = "document/pdf";
+                        break;
+                    case "image/jpeg":
+                    case "image/png":
+                        mimeType = mediaData.MimeType;
+                        break;
+                    default:
+                        continue;
+                }
+
+                var asset = new ProductAsset
+                {
+                    MimeType = mimeType,
+                    Name = new L10nString(mediaData.Name),
+                    Url = absoluteUrl.ToString()
+                };
+
+                assets.Add(asset);
+            }
+
+            return assets;
         }
 
         public ProductMetadata ProductMetadata()

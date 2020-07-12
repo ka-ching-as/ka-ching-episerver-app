@@ -11,6 +11,7 @@
   </episerver.shell>
 
   <kaching productsImportUrl=""
+           productAssetsImportUrl=""
            foldersImportUrl=""
            tagsImportUrl=""
            exportSingleVariantAsProduct="false" xdt:Transform="InsertIfMissing">

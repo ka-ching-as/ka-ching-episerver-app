@@ -11,9 +11,9 @@ namespace KachingPlugIn.Helpers
     {
         private static readonly ILogger _log = LogManager.GetLogger(typeof(APIFacade));
 
-        public static HttpStatusCode Delete(IList<string> ids, string url)
+        public static HttpStatusCode Delete(IEnumerable<string> ids, string url)
         {
-            var deleteUrl = url + "&ids=" + string.Join(",", ids);
+            string deleteUrl = url + "&ids=" + string.Join(",", ids);
             _log.Information("Delete url: " + deleteUrl);
 
             WebRequest request = WebRequest.Create(deleteUrl);
