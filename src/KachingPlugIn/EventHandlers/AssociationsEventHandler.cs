@@ -7,7 +7,7 @@ using KachingPlugIn.Services;
 using Mediachase.Commerce.Catalog;
 using Mediachase.Commerce.Catalog.Events;
 
-namespace KachingPlugIn.KachingPlugIn.EventHandlers
+namespace KachingPlugIn.EventHandlers
 {
     [ServiceConfiguration(typeof(CatalogEventListenerBase), Lifecycle = ServiceInstanceScope.Singleton)]
     public class AssociationsEventHandler : CatalogEventListenerBase

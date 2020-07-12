@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using Newtonsoft.Json;
 
-namespace KachingPlugIn.KachingPlugIn.Models
+namespace KachingPlugIn.Models
 {
     public class RecommendationGroup
     {

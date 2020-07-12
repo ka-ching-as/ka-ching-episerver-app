@@ -2,7 +2,7 @@
 using EPiServer.Commerce.SpecializedProperties;
 using EPiServer.Core;
 
-namespace KachingPlugIn.KachingPlugIn
+namespace KachingPlugIn
 {
     public class CommerceMediaComparer : IEqualityComparer<CommerceMedia>
     {

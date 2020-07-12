@@ -1,4 +1,4 @@
-﻿namespace KachingPlugIn.KachingPlugIn.Models
+﻿namespace KachingPlugIn.Models
 {
     public enum PriceUnit
     {

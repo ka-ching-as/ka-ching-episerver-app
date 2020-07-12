@@ -1,7 +1,6 @@
-﻿using KachingPlugIn.Models;
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 
-namespace KachingPlugIn.KachingPlugIn.Models
+namespace KachingPlugIn.Models
 {
     public class ProductAsset
     {

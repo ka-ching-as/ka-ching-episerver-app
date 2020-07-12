@@ -2,7 +2,7 @@
 using EPiServer.Framework.Initialization;
 using KachingPlugIn.EventHandlers;
 
-namespace KachingPlugIn.Intialization
+namespace KachingPlugIn.Initialization
 {
     [InitializableModule]
     [ModuleDependency(typeof(EPiServer.Web.InitializationModule))]

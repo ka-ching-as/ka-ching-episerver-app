@@ -14,7 +14,6 @@ using System.Globalization;
 using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
-using KachingPlugIn.KachingPlugIn.Models;
 
 namespace KachingPlugIn.Services
 {

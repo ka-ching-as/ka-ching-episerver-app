@@ -8,8 +8,6 @@ using EPiServer.Web;
 using EPiServer.Web.Routing;
 using KachingPlugIn.Configuration;
 using KachingPlugIn.Helpers;
-using KachingPlugIn.KachingPlugIn;
-using KachingPlugIn.KachingPlugIn.Models;
 using KachingPlugIn.Models;
 using Mediachase.Commerce;
 using Mediachase.Commerce.Catalog;
