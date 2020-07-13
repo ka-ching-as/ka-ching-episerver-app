@@ -37,13 +37,13 @@
     <Compile Include="Configuration\SystemMappingElement.cs" />
     <Compile Include="EnumerableExtensions.cs" />
     <Compile Include="CommerceMediaComparer.cs" />
-    <Compile Include="EventHandlers\AssociationsEventHandler.cs" />
     <Compile Include="EventHandlers\CatalogEventHandler.cs" />
+    <Compile Include="EventHandlers\CatalogKeyEventHandler.cs" />
+    <Compile Include="EventInitialization.cs" />
     <Compile Include="Factories\L10nStringFactory.cs" />
     <Compile Include="Factories\ProductFactory.cs" />
     <Compile Include="Helpers\APIFacade.cs" />
     <Compile Include="Helpers\StringExtensions.cs" />
-    <Compile Include="Initialization\Initialization.cs" />
     <Compile Include="Models\AttributeTextValue.cs" />
     <Compile Include="Models\Dimension.cs" />
     <Compile Include="Models\DimensionValue.cs" />

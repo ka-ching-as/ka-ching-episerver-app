@@ -1,302 +1,255 @@
 ﻿using EPiServer;
 using EPiServer.Commerce.Catalog.ContentTypes;
+using EPiServer.Commerce.Catalog.Linking;
 using EPiServer.Core;
+using EPiServer.Framework.Cache;
 using EPiServer.Logging;
-using KachingPlugIn.Helpers;
+using EPiServer.ServiceLocation;
+using KachingPlugIn.Configuration;
 using KachingPlugIn.Services;
 using Mediachase.Commerce.Catalog;
-using Mediachase.Commerce.Engine.Events;
-using System;
+using Mediachase.Commerce.Catalog.Events;
+using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
-using KachingPlugIn.Configuration;
 
 namespace KachingPlugIn.EventHandlers
 {
-    public class CatalogEventHandler
+    [ServiceConfiguration(typeof(CatalogEventListenerBase), Lifecycle = ServiceInstanceScope.Singleton)]
+    public class CatalogEventHandler : CatalogEventListenerBase
     {
-        private enum ChangeType
-        {
-            Published,
-            Moved,
-            Deleting,
-            Deleted
-        }
-
-        private readonly CatalogKeyEventBroadcaster _catalogKeyEventBroadcaster;
-        private readonly ILogger _log = LogManager.GetLogger(typeof(CatalogEventHandler));
-        private readonly IContentEvents _contentEvents;
+        private static readonly ILogger Logger = LogManager.GetLogger(typeof(CatalogEventHandler));
+        private readonly IObjectInstanceCache _cache;
         private readonly ReferenceConverter _referenceConverter;
+        private readonly IRelationRepository _relationRepository;
         private readonly IContentLoader _contentLoader;
         private readonly CategoryExportService _categoryExportService;
         private readonly ProductExportService _productExportService;
 
-        private NodeContent DeletingCategory = null;
-
         public CatalogEventHandler(
-            CatalogKeyEventBroadcaster catalogKeyEventBroadcaster,
-            IContentEvents contentEvents,
+            IObjectInstanceCache cache,
             ReferenceConverter referenceConverter,
+            IRelationRepository relationRepository,
             IContentLoader contentLoader,
             CategoryExportService categoryExportService,
             ProductExportService productExportService)
         {
-            _catalogKeyEventBroadcaster = catalogKeyEventBroadcaster;
-            _contentEvents = contentEvents;
+            _cache = cache;
             _referenceConverter = referenceConverter;
+            _relationRepository = relationRepository;
             _contentLoader = contentLoader;
             _categoryExportService = categoryExportService;
             _productExportService = productExportService;
         }
-        public void Initialize()
-        {
-            _catalogKeyEventBroadcaster.PriceUpdated += OnPriceUpdated;
 
-            _contentEvents.PublishedContent += OnPublishedContent;
-            _contentEvents.MovedContent += OnMovedContent;
-            _contentEvents.DeletingContent += OnDeletingContent;
-            _contentEvents.DeletedContent += OnDeletedContent;
+        public override void AssociationUpdated(object sender, AssociationEventArgs e)
+        {
+            Logger.Debug("AssociationUpdated raised.");
+
+            IEnumerable<ContentReference> contentLinks = GetContentLinks(e.Changes);
+            ICollection<ContentReference> affectedProductLinks = GetAffectedProductReferences(contentLinks).ToArray();
+
+            // HACK: Episerver does not clear the deleted associations from cache until after this event has completed.
+            // In order to load the list of associations after deletions/updates, force delete the association list from cache.
+            foreach (ContentReference entryRef in affectedProductLinks)
+            {
+                _cache.Remove("EP:ECF:Ass:" + entryRef.ID);
+            }
+
+            _productExportService.ExportProductRecommendations(affectedProductLinks);
         }
 
-        public void Uninitialize()
+        public override void EntryDeleted(object sender, DeletedEntryEventArgs e)
         {
-            _catalogKeyEventBroadcaster.PriceUpdated -= OnPriceUpdated;
+            Logger.Debug("EntryDeleted raised.");
 
-            _contentEvents.PublishedContent -= OnPublishedContent;
-            _contentEvents.MovedContent -= OnMovedContent;
-            _contentEvents.DeletingContent -= OnDeletingContent;
-            _contentEvents.DeletedContent -= OnDeletedContent;
+            IEnumerable<ContentReference> contentLinks = GetContentLinks(e.Changes);
+            IEnumerable<ContentReference> affectedProductLinks = GetAffectedProductReferences(contentLinks);
+
+            ProductContent[] products = _contentLoader.GetItems(affectedProductLinks, CultureInfo.InvariantCulture)
+                .OfType<ProductContent>()
+                .ToArray();
+
+            _productExportService.DeleteProducts(products);
+            _productExportService.DeleteProductAssets(products);
+            _productExportService.DeleteProductRecommendations(products);
         }
 
-        private void OnDeletedContent(object sender, DeleteContentEventArgs e)
+        public override void EntryUpdated(object sender, EntryEventArgs e)
         {
-            _log.Information("OnDeletedContent");
-            if (DeletingCategory != null)
+            Logger.Debug("EntryUpdated raised.");
+
+            IEnumerable<ContentReference> contentLinks = GetContentLinks(e.Changes);
+            IEnumerable<ContentReference> affectedProductLinks = GetAffectedProductReferences(contentLinks);
+
+            ProductContent[] products = _contentLoader.GetItems(affectedProductLinks, CultureInfo.InvariantCulture)
+                .OfType<ProductContent>()
+                .ToArray();
+
+            foreach (ProductContent product in products)
             {
-                HandleCategoryChange(DeletingCategory, ChangeType.Deleted);
-                DeletingCategory = null;
+                // TODO: Refactor to batched export.
+                _productExportService.ExportProduct(product, null);
             }
+
+            _productExportService.ExportProductAssets(products);
         }
 
-        private void OnDeletingContent(object sender, DeleteContentEventArgs e)
+        public override void NodeDeleted(object sender, DeletedNodeEventArgs e)
         {
-            _log.Information("OnDeletingContent");
-            try
-            {
-                var content = _contentLoader.Get<ContentData>(e.ContentLink);
-                if (content is VariationContent)
-                {
-                    var variant = content as VariationContent;
-                    _log.Information("Ka-ching event handler processing variant deleting: " + variant.Code);
-                    HandleVariantChange(variant, true);
-                }
-                else if (content is ProductContent)
-                {
-                    var product = content as ProductContent;
-                    _log.Information("Ka-ching event handler processing product deleting: " + product.Code);
-                    HandleProductChange(product, true);
-                    _productExportService.DeleteProductRecommendations(product);
-                }
-                else if (content is NodeContent)
-                {
-                    var node = content as NodeContent;
-                    DeletingCategory = node;
-                    _log.Information("Ka-ching event handler processing category deleting: " + node.Code);
-                    HandleCategoryChange(node, ChangeType.Deleting);
-                }
-            }
-            catch (Exception ex)
-            {
-                _log.Error(ex.Message);
-            }
-        }
+            Logger.Debug("NodeDeleted raised.");
 
-        private void OnMovedContent(object sender, ContentEventArgs e)
-        {
-            _log.Information("OnMovedContent");
-            try
+            IEnumerable<ContentReference> contentLinks = GetContentLinks(e.Changes);
+
+            NodeContent[] nodes = _contentLoader.GetItems(contentLinks, CultureInfo.InvariantCulture)
+                .OfType<NodeContent>()
+                .ToArray();
+
+            foreach (NodeContent node in nodes)
             {
-                var content = _contentLoader.Get<ContentData>(e.ContentLink);
-                if (content is VariationContent)
-                {
-                    var variant = content as VariationContent;
-                    _log.Information("Ka-ching event handler processing variant move: " + variant.Code);
-                    HandleVariantChange(variant, false);
-                }
-                else if (content is ProductContent)
-                {
-                    var product = content as ProductContent;
-                    _log.Information("Ka-ching event handler processing product move: " + product.Code);
-                    HandleProductChange(product, false);
-                }
-                else if (content is NodeContent)
-                {
-                    var node = content as NodeContent;
-                    _log.Information("Ka-ching event handler processing category move: " + node.Code);
-                    HandleCategoryChange(node, ChangeType.Moved);
-                }
-            }
-            catch (Exception ex)
-            {
-                _log.Error(ex.Message);
+                _productExportService.DeleteChildProducts(node);
             }
         }
 
-        private void OnPublishedContent(object sender, ContentEventArgs e)
+        public override void NodeUpdated(object sender, NodeEventArgs e)
         {
-            _log.Information("OnPublishedContent");
-            try
-            {
-                var content = _contentLoader.Get<ContentData>(e.ContentLink);
-                if (content is VariationContent)
-                {
-                    var variant = content as VariationContent;
-                    _log.Information("Ka-ching event handler processing variant publish: " + variant.Code);
-                    HandleVariantChange(variant, false);
-                }
-                else if (content is ProductContent)
-                {
-                    var product = content as ProductContent;
-                    _log.Information("Ka-ching event handler processing product publish: " + product.Code);
-                    HandleProductChange(product, false);
-                    _productExportService.ExportProductRecommendations(product);
-                }
-                else if (content is NodeContent)
-                {
-                    var node = content as NodeContent;
-                    _log.Information("Ka-ching event handler processing category publish: " + node.Code);
-                    HandleCategoryChange(node, ChangeType.Published);
-                    _productExportService.ExportProductRecommendations(node);
-                }
-            }
-            catch (Exception ex)
-            {
-                _log.Error(ex.Message);
-            }
-        }
+            Logger.Debug("NodeUpdated raised.");
 
-        private void OnPriceUpdated(object sender, PriceUpdateEventArgs e)
-        {
-            _log.Information("OnPriceUpdated");
-            try
-            {
-                var codes = e.CatalogKeys.Select(x => x.CatalogEntryCode);
-                foreach (var code in codes)
-                {
-                    var link = _referenceConverter.GetContentLink(code);
-
-                    var content = _contentLoader.Get<ContentData>(link);
-                    if (content is VariationContent)
-                    {
-                        var variant = content as VariationContent;
-                        _log.Information("Ka-ching event handler processing variant price update: " + variant.Code);
-                        HandleVariantChange(variant, false);
-                    }
-                    else if (content is ProductContent)
-                    {
-                        var product = content as ProductContent;
-                        _log.Information("Ka-ching event handler processing product price update: " + product.Code);
-                        HandleProductChange(product, true);
-                    }
-                    else
-                    {
-                        _log.Warning("Price changed on unhandled type: " + content.GetType());
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                _log.Error(ex.Message);
-            }
-        }
-
-        private void HandleProductChange(ProductContent product, bool isDelete, string deletedVariantCode = null)
-        {
-            _log.Information("HandleProductChange: " + product.Code, " isDelete: " + isDelete.ToString());
-
-            // Make sure we have valid import endpoints configured before handling the change
             var configuration = KachingConfiguration.Instance;
-            if (!configuration.ProductsImportUrl.IsValidProductsImportUrl())
+
+            IEnumerable<ContentReference> contentLinks = GetContentLinks(e.Changes);
+
+            NodeContent[] nodes = _contentLoader.GetItems(contentLinks, CultureInfo.InvariantCulture)
+                .OfType<NodeContent>()
+                .ToArray();
+
+            // If this event was triggered by a move, re-export the complete category structure.
+            if (e.HasChangedParent)
             {
-                _log.Error("Ka-ching product import url is not valid: " + configuration.ProductsImportUrl);
-                return;
+                _categoryExportService.StartFullCategoryExport(
+                    configuration.TagsImportUrl,
+                    configuration.FoldersImportUrl);
             }
 
-            if (isDelete)
+            foreach (NodeContent node in nodes)
             {
-                _productExportService.DeleteProduct(product, configuration.ProductsImportUrl);
-                _productExportService.DeleteProductAssets(new[] {product.Code.KachingCompatibleKey()});
-                _productExportService.DeleteProductRecommendations(new[] { product.Code.KachingCompatibleKey() });
-            }
-            else
-            {
-                _productExportService.ExportProduct(product, deletedVariantCode, configuration.ProductsImportUrl);
-                _productExportService.ExportProductAssets(new[] {product});
-            }
-        }
-
-        private void HandleVariantChange(VariationContent variant, bool isDelete)
-        {
-            _log.Information("HandleVariantChange: " + variant.Code);
-
-            var parents = variant.GetParentProducts();
-            foreach (var parent in parents)
-            {
-                var product = _contentLoader.Get<ProductContent>(parent);
-
-                // Since a variants are not independent datatypes in Ka-ching 
-                // a variant change is always a product update and not a delete
-                var deletedVariantCode = isDelete ? variant.Code : null;
-                HandleProductChange(product, false, deletedVariantCode);
+                _productExportService.ExportChildProducts(node);
             }
         }
 
-        private void HandleCategoryChange(NodeContent node, ChangeType changeType)
+        public override void RelationUpdated(object sender, RelationEventArgs e)
         {
-            _log.Information("HandleCategoryChange - type: " + changeType + " code: " + node.Code);
-            // Make sure we have valid import endpoints configured before handling the change
-            var configuration = KachingConfiguration.Instance;
-            if (!configuration.TagsImportUrl.IsValidTagsImportUrl() ||
-                !configuration.FoldersImportUrl.IsValidFoldersImportUrl() ||
-                !configuration.ProductsImportUrl.IsValidProductsImportUrl())
+            Logger.Debug("RelationUpdated raised.");
+
+            // If an entry is moved to another node, export the entry.
+            IEnumerable<ContentReference> contentLinks = GetContentLinks(e.NodeEntryRelationChanges);
+            IEnumerable<ContentReference> affectedProductLinks = GetAffectedProductReferences(contentLinks).ToArray();
+
+            ProductContent[] products = _contentLoader.GetItems(affectedProductLinks, CultureInfo.InvariantCulture)
+                .OfType<ProductContent>()
+                .ToArray();
+
+            foreach (ProductContent product in products)
             {
-                _log.Error("Ka-ching tag or folder import urls not valid: " + configuration.TagsImportUrl + " - " + configuration.FoldersImportUrl);
-                return;
+                _productExportService.ExportProduct(product, null);
+            }
+        }
+
+        private IEnumerable<ContentReference> GetContentLinks(
+            IEnumerable<AssociationChange> associationChanges)
+        {
+            var uniqueLinks = new HashSet<ContentReference>();
+
+            foreach (AssociationChange associationChange in associationChanges.Where(c => c.ParentEntryId > 0))
+            {
+                uniqueLinks.Add(
+                    _referenceConverter.GetContentLink(
+                        associationChange.ParentEntryId,
+                        CatalogContentType.CatalogEntry,
+                        0));
             }
 
-            // Any category change in Episerver requires a full category export to Ka-ching 
-            // to make sure the structure is represented correctly in Ka-ching.
-            // We don't react to ChangeType.Deleting since that would find and export the category
-            // that's being deleted.
-            if (changeType != ChangeType.Deleting)
+            return uniqueLinks;
+        }
+
+        private IEnumerable<ContentReference> GetContentLinks(
+            IEnumerable<EntryChange> entryChanges)
+        {
+            var uniqueLinks = new HashSet<ContentReference>();
+
+            foreach (EntryChange entryChange in entryChanges.Where(c => c.EntryId > 0))
             {
-                _categoryExportService.StartFullCategoryExport(configuration.TagsImportUrl, configuration.FoldersImportUrl);
+                uniqueLinks.Add(
+                    _referenceConverter.GetContentLink(
+                        entryChange.EntryId,
+                        CatalogContentType.CatalogEntry,
+                        0));
             }
 
-            // Product action depends on change type
-            switch (changeType)
-            {
-                case ChangeType.Deleting:
+            return uniqueLinks;
+        }
 
-                    // Deleting a category in the Episerver Commerce UI also deletes all children
-                    // so we delete all child products here.
-                    // This action assumes that products with the same Code are not duplicated
-                    // anywhere else in the category tree.
-                    // If this is the case you need to clone this repo and implement the correct action yourself.
-                    _productExportService.DeleteChildProducts(node, configuration.ProductsImportUrl);
-                    break;
-                case ChangeType.Moved:
-                    // Exporting all child products on a category move will ensure that the tags used 
-                    // for folder placement in Ka-ching will match the new structure in Episerver.
-                    // This action assumes that products with the same Code are not duplicated
-                    // anywhere else in the category tree.
-                    // If this is the case you need to clone this repo and implement the correct action yourself.
-                    _productExportService.ExportChildProducts(node, configuration.ProductsImportUrl);
-                    break;
-                case ChangeType.Published:
-                case ChangeType.Deleted:
-                    // No product manipulation should be necessary here
-                    break;
+        private IEnumerable<ContentReference> GetContentLinks(
+            IEnumerable<NodeChange> nodeChanges)
+        {
+            var uniqueLinks = new HashSet<ContentReference>();
+
+            foreach (NodeChange nodeChange in nodeChanges.Where(c => c.NodeId > 0))
+            {
+                uniqueLinks.Add(
+                    _referenceConverter.GetContentLink(
+                        nodeChange.NodeId,
+                        CatalogContentType.CatalogNode,
+                        0));
             }
+
+            return uniqueLinks;
+        }
+
+        private IEnumerable<ContentReference> GetContentLinks(
+            IEnumerable<NodeEntryRelationChange> nodeEntryRelationChanges)
+        {
+            var uniqueLinks = new HashSet<ContentReference>();
+
+            foreach (NodeEntryRelationChange nodeEntryRelationChange in nodeEntryRelationChanges
+                .Where(c => c.EntryId > 0))
+            {
+                uniqueLinks.Add(
+                    _referenceConverter.GetContentLink(
+                        nodeEntryRelationChange.EntryId,
+                        CatalogContentType.CatalogEntry,
+                        0));
+            }
+
+            return uniqueLinks;
+        }
+
+        private IEnumerable<ContentReference> GetAffectedProductReferences(
+            IEnumerable<ContentReference> contentLinks)
+        {
+            var uniqueLinks = new HashSet<ContentReference>();
+
+            foreach (IContent content in _contentLoader.GetItems(contentLinks, CultureInfo.InvariantCulture))
+            {
+                switch (content)
+                {
+                    case VariationContent variationContent:
+                        foreach (ContentReference parentLink in _relationRepository
+                            .GetParents<ProductVariation>(variationContent.ContentLink)
+                            .Select(pv => pv.Parent))
+                        {
+                            uniqueLinks.Add(parentLink);
+                        }
+
+                        uniqueLinks.Add(variationContent.ParentLink);
+                        break;
+                    case ProductContent productContent:
+                        uniqueLinks.Add(productContent.ContentLink);
+                        break;
+                }
+            }
+
+            return uniqueLinks;
         }
     }
 }

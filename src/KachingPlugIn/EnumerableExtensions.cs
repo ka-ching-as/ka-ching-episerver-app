@@ -8,7 +8,7 @@ namespace KachingPlugIn
             this IEnumerable<T> collection,
             int batchSize)
         {
-            List<T> nextBatch = new List<T>(batchSize);
+            var nextBatch = new List<T>(batchSize);
             foreach (T item in collection)
             {
                 nextBatch.Add(item);
