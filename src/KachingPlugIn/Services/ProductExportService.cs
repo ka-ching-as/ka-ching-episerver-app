@@ -224,11 +224,6 @@ namespace KachingPlugIn.Services
             ExportProductRecommendations(catalog);
         }
 
-        public void ExportProductRecommendations(EntryContentBase entry)
-        {
-            ExportProductRecommendations(new[] { entry.ContentLink });
-        }
-
         public void ExportProductRecommendations(NodeContentBase node)
         {
             if (node == null)

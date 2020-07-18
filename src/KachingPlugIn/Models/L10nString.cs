@@ -28,30 +28,30 @@ namespace KachingPlugIn.Models
                 return false;
             }
 
-            if (obj is L10nString)
+            if (obj is L10nString l10NString)
             {
-                var l10nString = obj as L10nString;
-                if (l10nString.Unlocalized != null && Unlocalized != null && l10nString.Localized == null && Localized == null)
+                if (l10NString.Unlocalized != null && Unlocalized != null && l10NString.Localized == null && Localized == null)
                 {
-                    return l10nString.Unlocalized == Unlocalized;
+                    return l10NString.Unlocalized == Unlocalized;
                 }
-                if (l10nString.Localized != null && Localized != null && l10nString.Unlocalized == null && Unlocalized == null)
+
+                if (l10NString.Localized != null && Localized != null && l10NString.Unlocalized == null && Unlocalized == null)
                 {
-                    if (l10nString.Localized == Localized) return true;
-                    if ((l10nString.Localized == null) || (Localized == null)) return false;
-                    if (l10nString.Localized.Count != Localized.Count) return false;
+                    if (l10NString.Localized == Localized) return true;
+                    if (l10NString.Localized == null || Localized == null) return false;
+                    if (l10NString.Localized.Count != Localized.Count) return false;
 
                     var valueComparer = EqualityComparer<string>.Default;
 
-                    foreach (var kvp in l10nString.Localized)
+                    foreach (var kvp in l10NString.Localized)
                     {
-                        string value2;
-                        if (!Localized.TryGetValue(kvp.Key, out value2)) return false;
+                        if (!Localized.TryGetValue(kvp.Key, out string value2)) return false;
                         if (!valueComparer.Equals(kvp.Value, value2)) return false;
                     }
                     return true;
                 }
-                if (l10nString.Localized == null && l10nString.Unlocalized == null && Localized == null && Unlocalized == null)
+
+                if (l10NString.Localized == null && l10NString.Unlocalized == null && Localized == null && Unlocalized == null)
                 {
                     return true;
                 }

@@ -5,6 +5,9 @@ namespace KachingPlugIn.Models
 {
     public class MarketPriceConverter : JsonConverter<MarketPrice>
     {
+        public override bool CanRead => false;
+        public override bool CanWrite => true;
+
         public override void WriteJson(
             JsonWriter writer,
             MarketPrice value,
@@ -27,7 +30,7 @@ namespace KachingPlugIn.Models
             bool hasExistingValue,
             JsonSerializer serializer)
         {
-            throw new NotImplementedException();
+            throw new NotSupportedException();
         }
     }
 }

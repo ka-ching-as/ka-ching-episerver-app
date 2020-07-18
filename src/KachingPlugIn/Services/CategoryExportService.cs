@@ -14,20 +14,20 @@ using System.Threading.Tasks;
 
 namespace KachingPlugIn.Services
 {
-    class FoldersAndTags
-    {
-        internal List<Folder> Folders { get; private set; }
-        internal IDictionary<string, Tag> Tags { get; private set; }
-
-        internal FoldersAndTags()
-        {
-            Folders = new List<Folder>();
-            Tags = new Dictionary<string, Tag>();
-        }
-    }
-
     public class CategoryExportService
     {
+        private class FoldersAndTags
+        {
+            internal List<Folder> Folders { get; }
+            internal IDictionary<string, Tag> Tags { get; }
+
+            internal FoldersAndTags()
+            {
+                Folders = new List<Folder>();
+                Tags = new Dictionary<string, Tag>();
+            }
+        }
+
         private readonly ReferenceConverter _referenceConverter;
         private readonly IContentLoader _contentLoader;
         private readonly IContentVersionRepository _contentVersionRepository;

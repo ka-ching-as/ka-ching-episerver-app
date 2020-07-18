@@ -7,9 +7,9 @@ using System.Net;
 
 namespace KachingPlugIn.Helpers
 {
-    public class APIFacade
+    public static class APIFacade
     {
-        private static readonly ILogger _log = LogManager.GetLogger(typeof(APIFacade));
+        private static readonly ILogger Logger = LogManager.GetLogger(typeof(APIFacade));
 
         public static HttpStatusCode DeleteObject(object model, string url)
         {
@@ -18,15 +18,17 @@ namespace KachingPlugIn.Helpers
             request.Method = "DELETE";
             request.ContentType = "application/json";
 
-            using (Stream dataStream = request.GetRequestStream())
-            using (StreamWriter streamWriter = new StreamWriter(dataStream))
+            using (var dataStream = request.GetRequestStream())
+            using (var streamWriter = new StreamWriter(dataStream))
             {
-                JsonSerializer serializer = new JsonSerializer();
-                serializer.ContractResolver = new DefaultContractResolver
+                var serializer = new JsonSerializer
                 {
-                    NamingStrategy = new SnakeCaseNamingStrategy()
+                    ContractResolver = new DefaultContractResolver
+                    {
+                        NamingStrategy = new SnakeCaseNamingStrategy()
+                    },
+                    NullValueHandling = NullValueHandling.Ignore
                 };
-                serializer.NullValueHandling = NullValueHandling.Ignore;
 
                 serializer.Serialize(streamWriter, model);
             }
@@ -39,7 +41,7 @@ namespace KachingPlugIn.Helpers
         public static HttpStatusCode Delete(IEnumerable<string> ids, string url)
         {
             string deleteUrl = url + "&ids=" + string.Join(",", ids);
-            _log.Information("Delete url: " + deleteUrl);
+            Logger.Information("Delete url: " + deleteUrl);
 
             WebRequest request = WebRequest.Create(deleteUrl);
             request.Method = "DELETE";
@@ -56,15 +58,17 @@ namespace KachingPlugIn.Helpers
             request.Method = "POST";
             request.ContentType = "application/json";
 
-            using (Stream dataStream = request.GetRequestStream())
-            using (StreamWriter streamWriter = new StreamWriter(dataStream))
+            using (var dataStream = request.GetRequestStream())
+            using (var streamWriter = new StreamWriter(dataStream))
             {
-                JsonSerializer serializer = new JsonSerializer();
-                serializer.ContractResolver = new DefaultContractResolver
+                var serializer = new JsonSerializer
                 {
-                    NamingStrategy = new SnakeCaseNamingStrategy()
+                    ContractResolver = new DefaultContractResolver
+                    {
+                        NamingStrategy = new SnakeCaseNamingStrategy()
+                    },
+                    NullValueHandling = NullValueHandling.Ignore
                 };
-                serializer.NullValueHandling = NullValueHandling.Ignore;
 
                 serializer.Serialize(streamWriter, model);
             }

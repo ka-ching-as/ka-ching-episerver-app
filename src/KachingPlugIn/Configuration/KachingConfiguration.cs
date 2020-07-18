@@ -4,7 +4,9 @@ namespace KachingPlugIn.Configuration
 {
     public class KachingConfiguration : ConfigurationSection
     {
-        private static KachingConfiguration _instance;
+        public static KachingConfiguration Instance { get; } =
+            ConfigurationManager.GetSection("kaching") as KachingConfiguration ??
+            new KachingConfiguration();
 
         [ConfigurationProperty("foldersImportUrl", IsRequired = false)]
         public string FoldersImportUrl => (string)base["foldersImportUrl"];
@@ -29,9 +31,5 @@ namespace KachingPlugIn.Configuration
 
         [ConfigurationProperty("systemMappings", IsRequired = false)]
         public SystemMappingElement SystemMappings => (SystemMappingElement)base["systemMappings"];
-
-        public static KachingConfiguration Instance =>
-            _instance ?? (_instance = ConfigurationManager.GetSection("kaching") as KachingConfiguration ??
-                                      new KachingConfiguration());
     }
 }
