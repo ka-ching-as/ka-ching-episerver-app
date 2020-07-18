@@ -3,7 +3,7 @@ using EPiServer.Framework;
 using EPiServer.Framework.Initialization;
 using EPiServer.ServiceLocation;
 
-namespace KachingPlugIn.Web.Infrastructure
+namespace KachingPlugIn.Web
 {
     [InitializableModule]
     public class WebApiInitialization : IConfigurableModule

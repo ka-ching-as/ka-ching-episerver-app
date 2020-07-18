@@ -251,7 +251,7 @@
     <Compile Include="Customers\CustomersController.cs" />
     <Compile Include="Customers\CustomerViewModel.cs" />
     <Compile Include="Customers\CustomerViewModelFactory.cs" />
-    <Compile Include="Infrastructure\WebApiInitialization.cs" />
+    <Compile Include="WebApiInitialization.cs" />
     <Compile Include="KachingPlugIn\Controllers\KachingPlugInController.cs" />
     <Compile Include="KachingPlugIn\ViewModels\PlugInViewModel.cs" />
     <Compile Include="KachingPlugIn\ViewModels\ProgressViewModel.cs" />
@@ -302,6 +302,7 @@
       <Name>KachingPlugIn</Name>
     </ProjectReference>
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <PostBuildEvent>$(SolutionDir).nuget\NuGet.exe pack $(ProjectDir)KachingPlugIn.Web.nuspec -OutputDirectory $(ProjectDir)$(BaseIntermediateOutputPath) -IncludeReferencedProjects -Properties Configuration=$(Configuration)</PostBuildEvent>
