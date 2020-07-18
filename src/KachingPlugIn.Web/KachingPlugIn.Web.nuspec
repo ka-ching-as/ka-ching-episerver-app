@@ -24,8 +24,8 @@
   </metadata>
   <files>
     <file src="bin\$configuration$\KachingPlugIn.Web.dll" target="lib\net461\" />
-    <file src="KachingPlugin\Views\**\*.cshtml" target="content\net461\modules\_protected\KachingPlugIn\Views" />
-    <file src="module.config" target="content\net461\modules\_protected\KachingPlugIn\" />
+    <file src="KachingPlugin\Views\**\*.cshtml" target="content\net461\modules\_protected\KachingPlugIn.Web\Views" />
+    <file src="module.config" target="content\net461\modules\_protected\KachingPlugIn.Web\" />
     <file src="web.config.install.xdt" target="content\net461" />
     <file src="web.config.uninstall.xdt" target="content\net461" />
   </files>

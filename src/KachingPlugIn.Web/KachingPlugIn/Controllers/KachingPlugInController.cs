@@ -41,7 +41,7 @@ namespace KachingPlugIn.Web.KachingPlugIn.Controllers
             viewModel.CategoryExportStartButtonDisabled = !configuration.TagsImportUrl.IsValidTagsImportUrl() ||
                                                           !configuration.FoldersImportUrl.IsValidFoldersImportUrl();
 
-            return View("Index", viewModel);
+            return View(viewModel);
         }
 
         [HttpPost]
@@ -49,7 +49,7 @@ namespace KachingPlugIn.Web.KachingPlugIn.Controllers
         {
             var configuration = KachingConfiguration.Instance;
             _productExport.StartFullProductExport(configuration.ProductsImportUrl);
-            return RedirectToAction("Index", "KachingPlugIn");
+            return RedirectToAction("Index");
         }
 
         [HttpPost]
@@ -58,7 +58,7 @@ namespace KachingPlugIn.Web.KachingPlugIn.Controllers
             _log.Information("StartFullCategoryExport");
             var configuration = KachingConfiguration.Instance;
             _categoryExport.StartFullCategoryExport(configuration.TagsImportUrl, configuration.FoldersImportUrl);
-            return RedirectToAction("Index", "KachingPlugIn");
+            return RedirectToAction("Index");
         }
 
         [HttpGet]

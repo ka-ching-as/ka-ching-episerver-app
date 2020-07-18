@@ -4,6 +4,12 @@
     <section name="kaching" type="KachingPlugIn.Configuration.KachingConfiguration, KachingPlugIn" xdt:Transform="InsertIfMissing" xdt:Locator="Match(name)" />
   </configSections>
 
+  <episerver.shell>
+    <protectedModules>
+      <add name="KachingPlugIn.Web" />
+    </protectedModules>
+  </episerver.shell>
+
   <kaching productsImportUrl=""
            productAssetsImportUrl=""
            productRecommendationsImportUrl=""
