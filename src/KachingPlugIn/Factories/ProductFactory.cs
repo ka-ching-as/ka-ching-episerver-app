@@ -144,8 +144,8 @@ namespace KachingPlugIn.Factories
             if (productImage != null)
             {
                 Uri absoluteUrl = GetAbsoluteUrl(productImage.AssetLink);
-                kachingProduct.ImageUrl = absoluteUrl.AbsoluteUri;
-            }
+                kachingProduct.ImageUrl = absoluteUrl?.AbsoluteUri;
+            } 
 
             IEnumerable<ContentReference> variantRefs = _relationRepository
                 .GetChildren<ProductVariation>(product.ContentLink)
@@ -187,7 +187,7 @@ namespace KachingPlugIn.Factories
                     if (variantImage != null)
                     {
                         Uri absoluteUrl = GetAbsoluteUrl(variantImage.AssetLink);
-                        kachingProduct.ImageUrl = absoluteUrl.AbsoluteUri;
+                        kachingProduct.ImageUrl = absoluteUrl?.AbsoluteUri;
                     }
                 }
             }
@@ -233,7 +233,7 @@ namespace KachingPlugIn.Factories
                     if (variantImage != null)
                     {
                         Uri absoluteUrl = GetAbsoluteUrl(variantImage.AssetLink);
-                        kachingVariant.ImageUrl = absoluteUrl.AbsoluteUri;
+                        kachingVariant.ImageUrl = absoluteUrl?.AbsoluteUri;
                     }
 
                     if (kachingProduct.ImageUrl == null)
@@ -308,7 +308,7 @@ namespace KachingPlugIn.Factories
                 {
                     MimeType = mimeType,
                     Name = new L10nString(mediaData.Name),
-                    Url = absoluteUrl.ToString()
+                    Url = absoluteUrl?.ToString()
                 };
 
                 assets.Add(asset);
