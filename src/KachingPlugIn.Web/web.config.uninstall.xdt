@@ -6,7 +6,7 @@
 
   <episerver.shell>
     <protectedModules>
-      <add name="KachingPlugIn.Web" xdt:Locator="Match(name)" xdt:Transform="Remove" />
+      <add name="KachingPlugIn.Web" xdt:Transform="Remove" xdt:Locator="Match(name)"/>
     </protectedModules>
   </episerver.shell>
 

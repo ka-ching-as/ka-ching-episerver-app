@@ -14,7 +14,7 @@ namespace KachingPlugIn.Web.KachingPlugIn.Controllers
 {
     [GuiPlugIn(
         Area = PlugInArea.AdminMenu,
-        Url = "/Episerver/KachingPlugIn/KachingPlugIn",
+        Url = "/Episerver/KachingPlugIn.Web/KachingPlugIn",
         LanguagePath = "/modules/KachingPlugIn/EmbeddedLangFiles",
         DisplayName = "Ka-ching Integration")]
     public class KachingPlugInController : Controller
@@ -74,7 +74,7 @@ namespace KachingPlugIn.Web.KachingPlugIn.Controllers
             }
 
             return PartialView(
-                Paths.ToResource("KachingPlugIn", "Views/Progress.cshtml"),
+                Paths.ToResource("KachingPlugIn.Web", "Views/Progress.cshtml"),
                 BuildProgressViewModel());
         }
 
