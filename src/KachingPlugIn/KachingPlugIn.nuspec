@@ -17,6 +17,8 @@
     </dependencies>
   </metadata>
   <files>
-    <file src="bin\$configuration$\KachingPlugIn.dll" target="lib\net461\" />
+    <file src="bin\$configuration$\KachingPlugIn.dll" target="lib\net472\" />
+    <file src="web.config.install.xdt" target="content\net472" />
+    <file src="web.config.uninstall.xdt" target="content\net472" />
   </files>
 </package>
