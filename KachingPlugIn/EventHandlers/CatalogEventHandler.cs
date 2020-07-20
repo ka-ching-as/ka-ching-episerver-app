@@ -3,7 +3,6 @@ using EPiServer.Commerce.Catalog.ContentTypes;
 using EPiServer.Core;
 using EPiServer.Logging;
 using KachingPlugIn.Helpers;
-using KachingPlugIn.Models;
 using KachingPlugIn.Services;
 using Mediachase.Commerce.Catalog;
 using Mediachase.Commerce.Engine.Events;
@@ -200,7 +199,7 @@ namespace KachingPlugIn.EventHandlers
                     }
                     else
                     {
-                        _log.Warning("Price changed on unhandled type: " + content.GetType().ToString());
+                        _log.Warning("Price changed on unhandled type: " + content.GetType());
                     }
                 }
             }
@@ -226,10 +225,13 @@ namespace KachingPlugIn.EventHandlers
             {
                 _productExportService.DeleteProduct(product, configuration.ProductsImportUrl);
                 _productExportService.DeleteProductRecommendations(new[] { product.Code.KachingCompatibleKey() });
+                _productExportService.DeleteProductAssets(new[] {product.Code.KachingCompatibleKey()});
             }
             else
             {
                 _productExportService.ExportProduct(product, deletedVariantCode, configuration.ProductsImportUrl);
+                _productExportService.ExportProductAssets(new[] {product});
+                _productExportService.ExportProductRecommendations(new [], {product})
             }
         }
 
@@ -251,7 +253,7 @@ namespace KachingPlugIn.EventHandlers
 
         private void HandleCategoryChange(NodeContent node, ChangeType changeType)
         {
-            _log.Information("HandleCategoryChange - type: " + changeType.ToString() + " code: " + node.Code);
+            _log.Information("HandleCategoryChange - type: " + changeType + " code: " + node.Code);
             // Make sure we have valid import endpoints configured before handling the change
             var configuration = KachingConfiguration.Instance;
             if (!configuration.TagsImportUrl.IsValidTagsImportUrl() ||

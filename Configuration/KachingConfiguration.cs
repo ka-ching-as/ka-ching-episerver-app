@@ -15,6 +15,9 @@ namespace KachingPlugIn.Configuration
         [ConfigurationProperty("productRecommendationsImportUrl", IsRequired = false)]
         public string ProductRecommendationsImportUrl => (string)base["productRecommendationsImportUrl"];
 
+        [ConfigurationProperty("productAssetsImportUrl", IsRequired = false)]
+        public string ProductAssetsImportUrl => (string)base["productAssetsImportUrl"];
+
         [ConfigurationProperty("tagsImportUrl", IsRequired = false)]
         public string TagsImportUrl => (string)base["tagsImportUrl"];
 

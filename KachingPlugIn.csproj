@@ -40,6 +40,8 @@
     <Compile Include="Customers\CustomerViewModel.cs" />
     <Compile Include="Customers\CustomerViewModelFactory.cs" />
     <Compile Include="Infrastructure\WebApiInitialization.cs" />
+    <Compile Include="EnumerableExtensions.cs" />
+    <Compile Include="KachingPlugIn\CommerceMediaComparer.cs" />
     <Compile Include="KachingPlugIn\Controllers\KachingPlugInController.cs" />
     <Compile Include="KachingPlugIn\EventHandlers\AssociationsEventHandler.cs" />
     <Compile Include="KachingPlugIn\EventHandlers\CatalogEventHandler.cs" />
@@ -58,6 +60,7 @@
     <Compile Include="KachingPlugIn\Models\PriceUnit.cs" />
     <Compile Include="KachingPlugIn\Models\Product.cs" />
     <Compile Include="KachingPlugIn\Models\RecommendationGroup.cs" />
+    <Compile Include="KachingPlugIn\Models\ProductAsset.cs" />
     <Compile Include="KachingPlugIn\Models\Tag.cs" />
     <Compile Include="KachingPlugIn\Models\L10nString.cs" />
     <Compile Include="KachingPlugIn\Models\MarketPrice.cs" />

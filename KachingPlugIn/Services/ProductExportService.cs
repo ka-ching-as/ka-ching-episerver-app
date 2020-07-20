@@ -15,6 +15,9 @@ using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
 using EPiServer.Framework.Cache;
+using AuthorizeNet.Api.Contracts.V1;
+using KachingPlugIn.Configuration;
+using KachingPlugIn.KachingPlugIn.Models;
 
 namespace KachingPlugIn.Services
 {
@@ -65,7 +68,10 @@ namespace KachingPlugIn.Services
                 try
                 {
                     ExportAllProducts(url);
+
                     ExportAllProductRecommendations();
+
+                    ExportAllProductAssets();
 
                     ResetState(false);
                 }
@@ -98,7 +104,10 @@ namespace KachingPlugIn.Services
             var ids = new List<string>();
             ids.Add(product.Code.KachingCompatibleKey());
             var statusCode = APIFacade.Delete(ids, url);
-            _log.Information("Status code: " + statusCode.ToString());
+            _log.Information("Status code: " + statusCode);
+
+            DeleteProductAssets(ids);
+            DeleteProductRecommendations(ids);
         }
 
         public void DeleteChildProducts(NodeContent category, string url)
@@ -116,6 +125,7 @@ namespace KachingPlugIn.Services
             // When deleting category entries, tell Ka-ching to delete all outgoing product recommendations for the entries.
             // If any of those entries actually have no recommendations, Ka-ching will silently ignore those deletions.
             DeleteProductRecommendations(ids);
+            DeleteProductAssets(ids);
         }
 
         public void DeleteProductRecommendations(EntryContentBase entry)
@@ -126,28 +136,51 @@ namespace KachingPlugIn.Services
         public void DeleteProductRecommendations(ICollection<string> entryCodes)
         {
             if (entryCodes == null ||
+                entryCodes.Count == 0) {
+                return;
+            }
+            DeleteProductRecommendations(ids);
+        }
+
+        public void DeleteProductAssets(ICollection<string> entryCodes)
+        {
+            if (entryCodes == null ||
                 entryCodes.Count == 0)
             {
                 return;
             }
 
-            if (!_configuration.ProductRecommendationsImportUrl.IsValidProductRecommendationsImportUrl())
+            if (!_configuration.ProductAssetsImportUrl.IsValidProductAssetsImportUrl())
             {
                 return;
             }
 
-            // For each known association group, tell Ka-ching to delete all outgoing associations for the specified products.
-            // We are doing it this way, because the import queue expects to be told which recommendation category
-            // to delete associations from. Deleting a catalog entry from Episerver, affects all recommendation categories.
-            foreach (var associationGroup in _associationGroupRepository.List())
+            APIFacade.Delete(entryCodes, _configuration.ProductAssetsImportUrl);
+        }
+
+        public void ExportProductAssets(ICollection<EntryContentBase> entries)
+        {
+            if (entries == null ||
+                entries.Count == 0)
             {
-                // Do the deletion in batches.
-                foreach (var batch in entryCodes.Batch(BatchSize))
+                return;
+            }
+            if (!_configuration.ProductAssetsImportUrl.IsValidProductAssetsImportUrl())
+            {
+                return;
+            }
+            foreach (var batch in entries.Batch(BatchSize))
+            {
+                var assets = new Dictionary<string, ICollection<ProductAsset>>(BatchSize);
+                foreach (var entry in batch)
                 {
-                    APIFacade.Delete(
-                        batch,
-                        _configuration.ProductRecommendationsImportUrl + "&recommendation_id=" + associationGroup.Name.KachingCompatibleKey());
+                    assets.Add(
+                        entry.Code.KachingCompatibleKey(),
+                        _productFactory.BuildKaChingProductAssets(entry).ToArray());
                 }
+                APIFacade.Post(
+                    new { assets },
+                    _configuration.ProductAssetsImportUrl);
             }
         }
 
@@ -303,6 +336,47 @@ namespace KachingPlugIn.Services
             PostKachingProducts(products, url);
         }
 
+        private void ExportAllProductAssets()
+        {
+            var assets = new Dictionary<string, IEnumerable<ProductAsset>>();
+            var entriesWithoutAssets = new List<string>();
+
+            var root = _contentLoader.GetChildren<CatalogContent>(_referenceConverter.GetRootLink());
+            BuildKachingProductAssets(root.FirstOrDefault(), assets, entriesWithoutAssets);
+
+            if (assets.Count == 0)
+            {
+                return;
+            }
+
+            if (!_configuration.ProductAssetsImportUrl.IsValidProductAssetsImportUrl())
+            {
+                return;
+            }
+
+            if (ExportState != null)
+            {
+                ExportState.Total = assets.Count;
+            }
+
+            // Push assets groups for products that have assets.
+            foreach (var batch in assets.Batch(BatchSize))
+            {
+                APIFacade.Post(
+                    new { assets = batch },
+                    _configuration.ProductAssetsImportUrl);
+            }
+
+            // Delete asset groups for products that have no assets (even if they do not exist in Ka-ching).
+            // This is to enforce no assets for products that have no assets, even if an individual deletion was missed earlier.
+            foreach (var batch in entriesWithoutAssets.Batch(BatchSize))
+            {
+                APIFacade.Delete(batch, _configuration.ProductAssetsImportUrl);
+            }
+
+            ResetState(false);
+        }
+
         private IList<Product> BuildKachingProducts(IEnumerable<NodeContent> nodes, IList<string> tags)
         {
             var configuration = KachingConfiguration.Instance;
@@ -341,6 +415,41 @@ namespace KachingPlugIn.Services
             return kachingProducts;
         }
 
+        private void BuildKachingProductAssets(
+            NodeContentBase node,
+            IDictionary<string, IEnumerable<ProductAsset>> productAssets,
+            ICollection<string> entriesWithoutAssets)
+        {
+            var children = _contentLoader.GetChildren<CatalogContentBase>(node.ContentLink);
+
+            foreach (var child in children)
+            {
+                switch (child)
+                {
+                    case NodeContent childNode:
+                        BuildKachingProductAssets(
+                            childNode,
+                            productAssets,
+                            entriesWithoutAssets);
+                        break;
+                    case ProductContent childEntry:
+                        ICollection<ProductAsset> assets = _productFactory.BuildKaChingProductAssets(childEntry);
+                        if (assets == null)
+                        {
+                            entriesWithoutAssets.Add(
+                                childEntry.Code.KachingCompatibleKey());
+                        }
+                        else
+                        {
+                            productAssets.Add(
+                                childEntry.Code.KachingCompatibleKey(),
+                                assets);
+                        }
+                        break;
+                }
+            }
+        }
+
         private IList<string> TagsForProduct(ProductContent product)
         {
             var result = new List<string>();
@@ -362,7 +471,6 @@ namespace KachingPlugIn.Services
         private IList<string> ParentTagsForCategory(NodeContent category)
         {
             var result = new List<string>();
-            var link = category.ParentLink;
 
             IEnumerable<NodeContent> ancestors = _contentLoader
                 .GetAncestors(category.ContentLink)

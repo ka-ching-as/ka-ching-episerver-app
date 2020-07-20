@@ -26,6 +26,11 @@ namespace KachingPlugIn.Helpers
             return IsValidUrl(url, "recommendations");
         }
 
+        public static bool IsValidProductAssetsImportUrl(this string url)
+        {
+            return IsValidUrl(url, "product_assets");
+        }
+
         public static bool IsValidProductsImportUrl(this string url)
         {
             return IsValidUrl(url, "products");
@@ -43,7 +48,14 @@ namespace KachingPlugIn.Helpers
 
         private static bool IsValidUrl(string url, string path)
         {
-            if (!Uri.TryCreate(url, UriKind.Absolute, out Uri uriResult))
+            if (string.IsNullOrWhiteSpace(url) ||
+                string.IsNullOrWhiteSpace(path))
+            {
+                return false;
+            }
+
+            Uri uriResult;
+            if (!Uri.TryCreate(url, UriKind.Absolute, out uriResult))
             {
                 return false;
             }

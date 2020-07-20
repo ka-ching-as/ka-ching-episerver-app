@@ -12,6 +12,7 @@
 
   <kaching productsImportUrl=""
            productRecommendationsImportUrl=""
+           productAssetsImportUrl=""
            foldersImportUrl=""
            tagsImportUrl=""
            exportSingleVariantAsProduct="false" xdt:Transform="InsertIfMissing">

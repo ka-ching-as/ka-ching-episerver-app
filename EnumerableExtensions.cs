@@ -26,5 +26,31 @@ namespace KachingPlugIn
                 yield return nextBatch;
             }
         }
+
+        public static IEnumerable<IDictionary<TKey, TValue>> Batch<TKey, TValue>(
+            this IDictionary<TKey, TValue> collection,
+            int batchSize)
+        {
+            IDictionary<TKey, TValue> nextBatch = new Dictionary<TKey, TValue>(batchSize);
+
+            foreach (KeyValuePair<TKey, TValue> item in collection)
+            {
+                nextBatch.Add(item);
+
+                if (nextBatch.Count < batchSize)
+                {
+                    continue;
+                }
+
+                yield return nextBatch;
+
+                nextBatch = new Dictionary<TKey, TValue>(batchSize);
+            }
+
+            if (nextBatch.Count > 0)
+            {
+                yield return nextBatch;
+            }
+        }
     }
 }
