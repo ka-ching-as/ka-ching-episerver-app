@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using Mediachase.Commerce.Catalog.Exceptions;
 using Newtonsoft.Json;
 
 namespace KachingPlugIn.Models
@@ -10,6 +12,12 @@ namespace KachingPlugIn.Models
             L10nString value,
             JsonSerializer serializer)
         {
+            if (value == null)
+            {
+                writer.WriteNull();
+                return;
+            }
+
             if (value.Localized != null)
             {
                 serializer.Serialize(writer, value.Localized);
@@ -27,8 +35,22 @@ namespace KachingPlugIn.Models
             bool hasExistingValue,
             JsonSerializer serializer)
         {
-            // Only handling serialization for now
-            throw new NotImplementedException();
+            if (reader.TokenType == JsonToken.Null)
+            {
+                return null;
+            }
+
+            switch (reader.TokenType)
+            {
+                case JsonToken.String:
+                    return new L10nString((string) reader.Value);
+                case JsonToken.StartObject:
+                    var localized = serializer.Deserialize<IDictionary<string, string>>(reader);
+
+                    return new L10nString(localized);
+                default:
+                    throw new InvalidObjectException("Unexpected format of L10nString.");
+            }
         }
     }
 }
