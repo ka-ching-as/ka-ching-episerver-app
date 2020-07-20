@@ -231,7 +231,7 @@ namespace KachingPlugIn.EventHandlers
             {
                 _productExportService.ExportProduct(product, deletedVariantCode, configuration.ProductsImportUrl);
                 _productExportService.ExportProductAssets(new[] {product});
-                _productExportService.ExportProductRecommendations(new [], {product})
+                _productExportService.ExportProductRecommendations(product);
             }
         }
 

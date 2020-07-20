@@ -16,7 +16,6 @@ using System.Net;
 using System.Threading.Tasks;
 using EPiServer.Framework.Cache;
 using AuthorizeNet.Api.Contracts.V1;
-using KachingPlugIn.Configuration;
 using KachingPlugIn.KachingPlugIn.Models;
 
 namespace KachingPlugIn.Services
@@ -139,7 +138,7 @@ namespace KachingPlugIn.Services
                 entryCodes.Count == 0) {
                 return;
             }
-            DeleteProductRecommendations(ids);
+            DeleteProductRecommendations(entryCodes);
         }
 
         public void DeleteProductAssets(ICollection<string> entryCodes)
