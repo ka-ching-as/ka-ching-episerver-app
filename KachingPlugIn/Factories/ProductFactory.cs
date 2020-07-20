@@ -51,6 +51,72 @@ namespace KachingPlugIn.Factories
             _l10nStringFactory = l10NStringFactory;
         }
 
+        public RecommendationGroup BuildKaChingRecommendationGroup(
+            ContentReference entryLink,
+            ICollection<Association> associations)
+        {
+            IDictionary<ContentReference, EntryContentBase> entriesByContentLink = _contentLoader
+                .GetItems(
+                    associations.Select(x => x.Target).Concat(new[] { entryLink }),
+                    CultureInfo.InvariantCulture)
+                .OfType<EntryContentBase>()
+                .ToDictionary(x => x.ContentLink);
+
+            if (!entriesByContentLink.TryGetValue(entryLink, out EntryContentBase entry))
+            {
+                return null;
+            }
+
+            ICollection<string> childCodes = new List<string>(associations.Count);
+            foreach (var targetRef in associations.Select(a => a.Target))
+            {
+                if (!entriesByContentLink.TryGetValue(targetRef, out EntryContentBase childEntry))
+                {
+                    continue;
+                }
+
+                childCodes.Add(childEntry.Code.KachingCompatibleKey());
+            }
+
+            return new RecommendationGroup
+            {
+                ProductId = entry.Code.KachingCompatibleKey(),
+                Recommendations = childCodes
+            };
+        }
+
+        public IEnumerable<RecommendationGroup> BuildKaChingRecommendationGroups(
+            IDictionary<string, ICollection<Association>> associationsByEntry)
+        {
+            foreach (var kvp in associationsByEntry)
+            {
+                IDictionary<ContentReference, EntryContentBase> entriesByContentLink = _contentLoader
+                    .GetItems(
+                        kvp.Value.Select(x => x.Target),
+                        CultureInfo.InvariantCulture)
+                    .OfType<EntryContentBase>()
+                    .ToDictionary(x => x.ContentLink);
+
+                ICollection<string> childCodes = new List<string>(kvp.Value.Count);
+
+                foreach (var targetRef in kvp.Value.Select(a => a.Target))
+                {
+                    if (!entriesByContentLink.TryGetValue(targetRef, out EntryContentBase childEntry))
+                    {
+                        continue;
+                    }
+
+                    childCodes.Add(childEntry.Code);
+                }
+
+                yield return new RecommendationGroup
+                {
+                    ProductId = kvp.Key,
+                    Recommendations = childCodes
+                };
+            }
+        }
+
         public Product BuildKaChingProduct(
             ProductContent product,
             ICollection<string> tags,

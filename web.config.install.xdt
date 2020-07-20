@@ -11,6 +11,7 @@
   </episerver.shell>
 
   <kaching productsImportUrl=""
+           productRecommendationsImportUrl=""
            productAssetsImportUrl=""
            foldersImportUrl=""
            tagsImportUrl=""
