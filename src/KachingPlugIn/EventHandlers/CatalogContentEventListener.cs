@@ -230,23 +230,6 @@ namespace KachingPlugIn.EventHandlers
         }
 
         private IEnumerable<ContentReference> GetContentLinks(
-            IEnumerable<AssociationChange> associationChanges)
-        {
-            var uniqueLinks = new HashSet<ContentReference>();
-
-            foreach (AssociationChange associationChange in associationChanges.Where(c => c.ParentEntryId > 0))
-            {
-                uniqueLinks.Add(
-                    _referenceConverter.GetContentLink(
-                        associationChange.ParentEntryId,
-                        CatalogContentType.CatalogEntry,
-                        0));
-            }
-
-            return uniqueLinks;
-        }
-
-        private IEnumerable<ContentReference> GetContentLinks(
             CatalogContentUpdateEventArgs eventArgs)
         {
             var uniqueLinks = new HashSet<ContentReference>();
@@ -266,75 +249,6 @@ namespace KachingPlugIn.EventHandlers
                     _referenceConverter.GetContentLink(
                         nodeId,
                         CatalogContentType.CatalogNode,
-                        0));
-            }
-
-            return uniqueLinks;
-        }
-
-        private IEnumerable<ContentReference> GetEntryContentLinks(
-            IEnumerable<EntryChange> entryChanges)
-        {
-            var uniqueLinks = new HashSet<ContentReference>();
-
-            foreach (EntryChange entryChange in entryChanges.Where(c => c.EntryId > 0))
-            {
-                uniqueLinks.Add(
-                    _referenceConverter.GetContentLink(
-                        entryChange.EntryId,
-                        CatalogContentType.CatalogEntry,
-                        0));
-            }
-
-            return uniqueLinks;
-        }
-
-        private IEnumerable<ContentReference> GetContentLinks(
-            IEnumerable<EntryChange> entryChanges)
-        {
-            var uniqueLinks = new HashSet<ContentReference>();
-
-            foreach (EntryChange entryChange in entryChanges.Where(c => c.EntryId > 0))
-            {
-                uniqueLinks.Add(
-                    _referenceConverter.GetContentLink(
-                        entryChange.EntryId,
-                        CatalogContentType.CatalogNode,
-                        0));
-            }
-
-            return uniqueLinks;
-        }
-
-        private IEnumerable<ContentReference> GetContentLinks(
-            IEnumerable<NodeChange> nodeChanges)
-        {
-            var uniqueLinks = new HashSet<ContentReference>();
-
-            foreach (NodeChange nodeChange in nodeChanges.Where(c => c.NodeId > 0))
-            {
-                uniqueLinks.Add(
-                    _referenceConverter.GetContentLink(
-                        nodeChange.NodeId,
-                        CatalogContentType.CatalogNode,
-                        0));
-            }
-
-            return uniqueLinks;
-        }
-
-        private IEnumerable<ContentReference> GetContentLinks(
-            IEnumerable<NodeEntryRelationChange> nodeEntryRelationChanges)
-        {
-            var uniqueLinks = new HashSet<ContentReference>();
-
-            foreach (NodeEntryRelationChange nodeEntryRelationChange in nodeEntryRelationChanges
-                .Where(c => c.EntryId > 0))
-            {
-                uniqueLinks.Add(
-                    _referenceConverter.GetContentLink(
-                        nodeEntryRelationChange.EntryId,
-                        CatalogContentType.CatalogEntry,
                         0));
             }
 
