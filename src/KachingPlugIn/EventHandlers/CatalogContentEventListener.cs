@@ -1,8 +1,9 @@
-﻿using System;
-using EPiServer;
+﻿using EPiServer;
 using EPiServer.Commerce.Catalog.ContentTypes;
 using EPiServer.Commerce.Catalog.Linking;
 using EPiServer.Core;
+using EPiServer.Events;
+using EPiServer.Events.Clients;
 using EPiServer.Framework.Cache;
 using EPiServer.Logging;
 using EPiServer.ServiceLocation;
@@ -10,14 +11,13 @@ using KachingPlugIn.Configuration;
 using KachingPlugIn.Services;
 using Mediachase.Commerce.Catalog;
 using Mediachase.Commerce.Catalog.Events;
+using Mediachase.Commerce.Engine.Events;
+using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Runtime.Serialization.Formatters.Binary;
-using EPiServer.Events;
-using EPiServer.Events.Clients;
-using Mediachase.Commerce.Engine.Events;
 
 namespace KachingPlugIn.EventHandlers
 {
@@ -50,20 +50,23 @@ namespace KachingPlugIn.EventHandlers
 
         public void Initialize()
         {
-            // TODO: Skip registration if this is disabled in configuration.
             Event.Get(CatalogEventBroadcaster.CommerceProductUpdated).Raised += CatalogContentUpdated;
             Event.Get(CatalogKeyEventBroadcaster.CatalogKeyEventGuid).Raised += CatalogKeyEventUpdated;
         }
 
         public void Uninitialize()
         {
-            // TODO: Skip de-registration if this is disabled in configuration.
             Event.Get(CatalogEventBroadcaster.CommerceProductUpdated).Raised -= CatalogContentUpdated;
             Event.Get(CatalogKeyEventBroadcaster.CatalogKeyEventGuid).Raised -= CatalogKeyEventUpdated;
         }
 
         private void CatalogContentUpdated(object sender, EventNotificationEventArgs e)
         {
+            if (!KachingConfiguration.Instance.ListenToRemoteEvents && !IsLocalEvent(e))
+            {
+                return;
+            }
+
             if (!(Deserialize(e) is CatalogContentUpdateEventArgs e1))
             {
                 return;
@@ -94,6 +97,11 @@ namespace KachingPlugIn.EventHandlers
 
         private void CatalogKeyEventUpdated(object sender, EventNotificationEventArgs e)
         {
+            if (!KachingConfiguration.Instance.ListenToRemoteEvents && !IsLocalEvent(e))
+            {
+                return;
+            }
+
             if (!(Deserialize(e) is PriceUpdateEventArgs e1))
             {
                 return;
@@ -296,6 +304,12 @@ namespace KachingPlugIn.EventHandlers
             {
                 return binaryFormatter.Deserialize(serializationStream) as EventArgs;
             }
+        }
+
+        private static bool IsLocalEvent(EventNotificationEventArgs e)
+        {
+            return e.RaiserId == CatalogKeyEventBroadcaster.EventRaiserId ||
+                   e.RaiserId == CatalogEventBroadcaster.EventRaiserId;
         }
     }
 }

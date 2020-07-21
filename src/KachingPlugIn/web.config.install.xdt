@@ -9,7 +9,9 @@
            productRecommendationsImportUrl=""
            foldersImportUrl=""
            tagsImportUrl=""
-           exportSingleVariantAsProduct="false" xdt:Transform="InsertIfMissing">
+           exportSingleVariantAsProduct="false"
+           listenToRemoteEvents="true"
+           xdt:Transform="InsertIfMissing">
     <systemMappings barcodeMetaField=""
                     descriptionMetaField=""/>
     <attributeMappings>

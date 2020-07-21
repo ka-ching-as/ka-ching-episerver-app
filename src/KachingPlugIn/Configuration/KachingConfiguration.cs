@@ -26,6 +26,9 @@ namespace KachingPlugIn.Configuration
         [ConfigurationProperty("exportSingleVariantAsProduct", IsRequired = false)]
         public bool ExportSingleVariantAsProduct => (bool)base["exportSingleVariantAsProduct"];
 
+        [ConfigurationProperty("listenToRemoteEvents", DefaultValue = true, IsRequired = false)]
+        public bool ListenToRemoteEvents => (bool)base["listenToRemoteEvents"];
+
         [ConfigurationProperty("attributeMappings", IsDefaultCollection = false)]
         public AttributeMappingCollection AttributeMappings => (AttributeMappingCollection)base["attributeMappings"];
 
