@@ -288,7 +288,7 @@ namespace KachingPlugIn.Factories
                     continue;
                 }
 
-                Uri absoluteUrl = GetAbsoluteUrl(commerceMedia.AssetLink);
+                Uri absoluteUrl = GetAbsoluteUrl(mediaData.ContentLink);
 
                 string mimeType;
                 switch (mediaData.MimeType)
@@ -416,6 +416,9 @@ namespace KachingPlugIn.Factories
                 contentRef,
                 string.Empty,
                 new UrlResolverArguments { ForceCanonical = true });
+            //string url = _urlResolver.GetUrl(
+            //    contentRef,
+            //    string.Empty);
 
             if (Uri.TryCreate(url, UriKind.RelativeOrAbsolute, out Uri absoluteUrl) &&
                 !absoluteUrl.IsAbsoluteUri)
