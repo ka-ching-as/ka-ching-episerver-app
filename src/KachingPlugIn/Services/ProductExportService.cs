@@ -67,6 +67,8 @@ namespace KachingPlugIn.Services
                     ExportAllProductAssets();
                     ExportAllProductRecommendations();
 
+                    ExportAllProductAssets();
+
                     ResetState(false);
                 }
                 catch (WebException e)
@@ -147,14 +149,12 @@ namespace KachingPlugIn.Services
             foreach (var batch in entries.Batch(BatchSize))
             {
                 var assets = new Dictionary<string, ICollection<ProductAsset>>(BatchSize);
-
                 foreach (var entry in batch)
                 {
                     assets.Add(
                         entry.Code.KachingCompatibleKey(),
                         _productFactory.BuildKaChingProductAssets(entry).ToArray());
                 }
-
                 APIFacade.Post(
                     new { assets },
                     _configuration.ProductAssetsImportUrl);
