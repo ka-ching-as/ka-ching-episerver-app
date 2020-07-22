@@ -78,7 +78,6 @@ namespace KachingPlugIn.Sales
 
             foreach (var groupedLineItems in kachingSale.Summary
                 .LineItems
-                .Where(li => li.EcomId != null)
                 .GroupBy(li => li.EcomId))
             {
                 var shippingLineItem = groupedLineItems.FirstOrDefault(li => li.Behavior?.Shipping != null);
@@ -99,8 +98,16 @@ namespace KachingPlugIn.Sales
 
                 foreach (var kachingLineItem in groupedLineItems)
                 {
-                    // Ignore special line items. For line items with EcomId != null
-                    // this can only be shipping line items at the moment
+                    // Skip special behavior line items. These are:
+                    // shipping - handled above
+                    // giftcard or voucher purchase
+                    // giftcard or voucher use (can be a line item if they are taxed at point of sale)
+                    // expenses
+                    // customer account deposit
+                    // container deposit
+                    //
+                    // We could consider including container deposit behavior
+                    // but for now we just skip that along with the rest.
                     if (kachingLineItem.Behavior != null)
                     {
                         continue;
@@ -252,6 +259,10 @@ namespace KachingPlugIn.Sales
             {
                 shipment.ShippingAddress = ConvertToAddress(shipment.ParentOrderGroup, kachingShipping);
             }
+            else if (kachingSale.Summary?.Customer != null)
+            {
+                shipment.ShippingAddress = ConvertToAddress(shipment.ParentOrderGroup, kachingSale.Summary.Customer);
+            }
 
             if (kachingShipping.MethodId != null)
             {
@@ -285,6 +296,29 @@ namespace KachingPlugIn.Sales
             orderAddress.FirstName = shipping.Address.Name;
             orderAddress.Line1 = shipping.Address.Street;
             orderAddress.PostalCode = shipping.Address.PostalCode;
+
+            return orderAddress;
+        }
+
+        protected virtual IOrderAddress ConvertToAddress(
+            IOrderGroup orderGroup,
+            SaleCustomerViewModel customer)
+        {
+            if (customer == null)
+            {
+                return null;
+            }
+
+            var orderAddress = _orderGroupFactory.CreateOrderAddress(orderGroup);
+            orderAddress.Id = "Shipping";
+            orderAddress.City = customer.City;
+            orderAddress.CountryCode = customer.CountryCode;
+            orderAddress.CountryName = customer.Country;
+            orderAddress.DaytimePhoneNumber = customer.Phone;
+            orderAddress.Email = customer.Email;
+            orderAddress.FirstName = customer.Name;
+            orderAddress.Line1 = customer.Street;
+            orderAddress.PostalCode = customer.PostalCode;
 
             return orderAddress;
         }

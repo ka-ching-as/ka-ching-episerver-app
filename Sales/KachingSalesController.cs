@@ -43,14 +43,6 @@ namespace KachingPlugIn.Sales
                 return StatusCode(HttpStatusCode.NoContent);
             }
 
-            // Ignore sales without any ecom items or invalid number of shipping lines
-            var ecomLines = sale.Summary.LineItems.Where(lineItem => lineItem.EcomId != null);
-            var shippingLines = ecomLines.Where(lineItem => lineItem.Behavior?.Shipping != null);
-            if (ecomLines.Count() == 0 || shippingLines.Count() != 1)
-            {
-                return StatusCode(HttpStatusCode.NoContent);
-            }
-
             try
             {
                 IPurchaseOrder purchaseOrder = _saleFactory.CreatePurchaseOrder(sale);
