@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
 using EPiServer.Core;
+using HtmlAgilityPack;
 
 namespace KachingPlugIn.Factories
 {
@@ -34,12 +35,23 @@ namespace KachingPlugIn.Factories
                 var localizedContent = _contentLoader.Get<CatalogContentBase>(content.ContentLink, culture);
 
                 PropertyData data = localizedContent.Property[propertyName];
-                if (data == null || data.IsNull || !(data.Value is string))
+                if (data == null || data.IsNull)
                 {
                     continue;
                 }
 
-                languageDictionary[culture.TwoLetterISOLanguageName] = (string)data.Value;
+                if (data.Value is string)
+                {
+                    languageDictionary[culture.TwoLetterISOLanguageName] = (string)data.Value;
+                }
+                else if (data.Value is XhtmlString)
+                {
+                    XhtmlString value = data.Value as XhtmlString;
+                    var html = value.ToEditString();
+                    var htmlDoc = new HtmlDocument();
+                    htmlDoc.LoadHtml(html);
+                    var text = htmlDoc.DocumentNode.InnerText;
+                }
             }
 
             return new L10nString(languageDictionary);
