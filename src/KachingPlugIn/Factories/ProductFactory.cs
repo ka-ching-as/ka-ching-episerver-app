@@ -270,17 +270,19 @@ namespace KachingPlugIn.Factories
 
             var assets = new List<ProductAsset>(entryContent.CommerceMediaCollection.Count);
 
-            // Load all media assets in one go, for the particular catalog entry.
+            // Load all media assets (except the first) in one go, for the particular catalog entry.
+            // Skip the first item because it will already be exported as the main image on the product object.
             IDictionary<ContentReference, MediaData> mediaByContentLink = _contentLoader
                 .GetItems(
                     entryContent.CommerceMediaCollection
+                        .Skip(1)
                         .Distinct(CommerceMediaComparer.Default)
                         .Select(x => x.AssetLink),
                     CultureInfo.InvariantCulture)
                 .OfType<MediaData>()
                 .ToDictionary(x => x.ContentLink);
 
-            foreach (CommerceMedia commerceMedia in entryContent.CommerceMediaCollection)
+            foreach (CommerceMedia commerceMedia in entryContent.CommerceMediaCollection.Skip(1))
             {
                 // Look up the referenced asset from the pre-loaded media assets.
                 if (!mediaByContentLink.TryGetValue(commerceMedia.AssetLink, out MediaData mediaData))
@@ -288,7 +290,7 @@ namespace KachingPlugIn.Factories
                     continue;
                 }
 
-                Uri absoluteUrl = GetAbsoluteUrl(commerceMedia.AssetLink);
+                Uri absoluteUrl = GetAbsoluteUrl(mediaData.ContentLink);
 
                 string mimeType;
                 switch (mediaData.MimeType)

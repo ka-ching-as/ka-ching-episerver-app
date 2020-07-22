@@ -10,14 +10,14 @@ namespace KachingPlugIn
     {
         public void Initialize(InitializationEngine context)
         {
-            var eventHandler = context.Locate.Advanced.GetInstance<CatalogKeyEventHandler>();
-            eventHandler.Initialize();
+            var eventListener = context.Locate.Advanced.GetInstance<CatalogContentEventListener>();
+            eventListener.Initialize();
         }
 
         public void Uninitialize(InitializationEngine context)
         {
-            var eventHandler = context.Locate.Advanced.GetInstance<CatalogKeyEventHandler>();
-            eventHandler.Uninitialize();
+            var eventListener = context.Locate.Advanced.GetInstance<CatalogContentEventListener>();
+            eventListener.Uninitialize();
         }
     }
 }
