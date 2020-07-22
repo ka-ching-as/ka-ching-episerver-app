@@ -19,6 +19,7 @@
       <dependency id="Microsoft.AspNet.WebApi.Owin" version="5.2.0" />
       <dependency id="Microsoft.Owin.Security" version="4.0.0" />
       <dependency id="Newtonsoft.Json" version="11.0.1" />
+      <dependency id="HtmlAgilityPack" version="1.11.0" />
     </dependencies>
   </metadata>
   <files>
