@@ -4,12 +4,6 @@
     <section name="kaching" type="KachingPlugIn.Configuration.KachingConfiguration, KachingPlugIn" xdt:Transform="InsertIfMissing" xdt:Locator="Match(name)" />
   </configSections>
 
-  <episerver.shell xdt:Transform="InsertIfMissing">
-    <protectedModules rootPath="~/EPiServer/" xdt:Transform="InsertIfMissing">
-      <add name="KachingPlugIn" xdt:Transform="InsertIfMissing" xdt:Locator="Match(name)"/>
-    </protectedModules>
-  </episerver.shell>
-
   <kaching productsImportUrl=""
            productAssetsImportUrl=""
            productRecommendationsImportUrl=""

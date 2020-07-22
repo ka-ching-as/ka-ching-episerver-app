@@ -4,11 +4,5 @@
     <section name="kaching" xdt:Transform="Remove" xdt:Locator="Match(name)" />
   </configSections>
 
-  <episerver.shell>
-    <protectedModules>
-      <add name="KachingPlugIn" xdt:Transform="Remove" xdt:Locator="Match(name)"/>
-    </protectedModules>
-  </episerver.shell>
-
   <kaching xdt:Transform="Remove"/>
 </configuration>

@@ -24,7 +24,7 @@
         @if (Model.ProgressViewModel.Busy)
         {
             <div id="progress">
-                @Html.Partial(Paths.ToResource("KachingPlugIn", "Views/Progress.cshtml"), Model.ProgressViewModel)
+                @Html.Partial(Paths.ToResource("KachingPlugIn.Web", "Views/Progress.cshtml"), Model.ProgressViewModel)
             </div>
         }
         else
