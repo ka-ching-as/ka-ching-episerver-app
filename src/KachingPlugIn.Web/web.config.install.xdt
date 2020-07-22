@@ -1,0 +1,25 @@
+<?xml version="1.0"?>
+<configuration xmlns:xdt="http://schemas.microsoft.com/XML-Document-Transform">
+  <configSections>
+    <section name="kaching" type="KachingPlugIn.Configuration.KachingConfiguration, KachingPlugIn" xdt:Transform="InsertIfMissing" xdt:Locator="Match(name)" />
+  </configSections>
+
+  <episerver.shell>
+    <protectedModules>
+      <add name="KachingPlugIn.Web" />
+    </protectedModules>
+  </episerver.shell>
+
+  <kaching productsImportUrl=""
+           productAssetsImportUrl=""
+           productRecommendationsImportUrl=""
+           foldersImportUrl=""
+           tagsImportUrl=""
+           exportSingleVariantAsProduct="false" xdt:Transform="InsertIfMissing">
+    <systemMappings barcodeMetaField=""
+                    descriptionMetaField=""/>
+    <attributeMappings>
+      <!--<add metaField="Brand" attributeId="brand"/>-->
+    </attributeMappings>
+  </kaching>
+</configuration>
