@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.30204.135
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KachingPlugIn", "KachingPlugIn\KachingPlugIn.csproj", "{53CB0FA3-6011-4063-8992-A7CC86FF8DD6}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KachingPlugIn.Web", "KachingPlugIn.Web\KachingPlugIn.Web.csproj", "{80A45120-5654-42DF-829C-9FB9FD43A249}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{53CB0FA3-6011-4063-8992-A7CC86FF8DD6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{53CB0FA3-6011-4063-8992-A7CC86FF8DD6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{53CB0FA3-6011-4063-8992-A7CC86FF8DD6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{53CB0FA3-6011-4063-8992-A7CC86FF8DD6}.Release|Any CPU.Build.0 = Release|Any CPU
+		{80A45120-5654-42DF-829C-9FB9FD43A249}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{80A45120-5654-42DF-829C-9FB9FD43A249}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{80A45120-5654-42DF-829C-9FB9FD43A249}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{80A45120-5654-42DF-829C-9FB9FD43A249}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {CA0E1560-B934-4704-A85E-1CB7A020D347}
+	EndGlobalSection
+EndGlobal
