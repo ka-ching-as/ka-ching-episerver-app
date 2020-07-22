@@ -189,7 +189,9 @@ namespace KachingPlugIn.Sales
             SaleViewModel kachingSale)
         {
             IShipment shipment = _orderGroupFactory.CreateShipment(purchaseOrder);
-            shipment.OrderShipmentStatus = OrderShipmentStatus.AwaitingInventory;
+            shipment.OrderShipmentStatus = kachingShipping != null
+                ? OrderShipmentStatus.AwaitingInventory
+                : OrderShipmentStatus.Shipped;
 
             return shipment;
         }
