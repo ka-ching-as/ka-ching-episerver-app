@@ -40,14 +40,13 @@ namespace KachingPlugIn.Factories
                     continue;
                 }
 
-                if (data.Value is string)
+                if (data.Value is string stringValue)
                 {
-                    languageDictionary[culture.TwoLetterISOLanguageName] = (string)data.Value;
+                    languageDictionary[culture.TwoLetterISOLanguageName] = stringValue;
                 }
-                else if (data.Value is XhtmlString)
+                else if (data.Value is XhtmlString htmlString)
                 {
-                    XhtmlString value = data.Value as XhtmlString;
-                    var html = value.ToEditString();
+                    var html = htmlString.ToEditString();
                     var htmlDoc = new HtmlDocument();
                     htmlDoc.LoadHtml(html);
                     var text = htmlDoc.DocumentNode.InnerText;
