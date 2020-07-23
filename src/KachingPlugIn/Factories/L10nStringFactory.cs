@@ -5,12 +5,14 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
 using EPiServer.Core;
+using EPiServer.Logging;
 using HtmlAgilityPack;
 
 namespace KachingPlugIn.Factories
 {
     public class L10nStringFactory
     {
+        private static readonly ILogger Logger = LogManager.GetLogger(typeof(L10nStringFactory));
         private readonly IContentLoader _contentLoader;
 
         public L10nStringFactory(
@@ -50,6 +52,7 @@ namespace KachingPlugIn.Factories
                     var htmlDoc = new HtmlDocument();
                     htmlDoc.LoadHtml(html);
                     var text = htmlDoc.DocumentNode.InnerText;
+                    languageDictionary[culture.TwoLetterISOLanguageName] = text;
                 }
             }
 

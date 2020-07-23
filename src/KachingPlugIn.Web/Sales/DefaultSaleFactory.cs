@@ -81,9 +81,9 @@ namespace KachingPlugIn.Web.Sales
                 .GroupBy(li => li.EcomId))
             {
                 var shippingLineItem = groupedLineItems.FirstOrDefault(li => li.Behavior?.Shipping != null);
-                var kachingShipping = shippingLineItem.Behavior.Shipping;
+                var kachingShipping = shippingLineItem?.Behavior?.Shipping;
 
-                total += shippingLineItem.Total;
+                total += shippingLineItem != null ? shippingLineItem.Total : 0;
 
                 IShipment shipment = CreateShipment(
                     purchaseOrder,
@@ -266,7 +266,7 @@ namespace KachingPlugIn.Web.Sales
                 shipment.ShippingAddress = ConvertToAddress(shipment.ParentOrderGroup, kachingSale.Summary.Customer);
             }
 
-            if (kachingShipping.MethodId != null)
+            if (kachingShipping?.MethodId != null)
             {
                 try
                 {

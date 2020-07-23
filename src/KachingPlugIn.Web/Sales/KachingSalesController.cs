@@ -43,12 +43,19 @@ namespace KachingPlugIn.Web.Sales
                 return StatusCode(HttpStatusCode.NoContent);
             }
 
+            // Ignore sales without any non special line items
+            var saleLines = sale.Summary.LineItems.Where(lineItem => lineItem.Behavior == null);
+            if (saleLines.Count() == 0)
+            {
+                return StatusCode(HttpStatusCode.NoContent);
+            }
+
             try
             {
                 IPurchaseOrder purchaseOrder = _saleFactory.CreatePurchaseOrder(sale);
                 _purchaseOrderProvider.Save(purchaseOrder);
             }
-            catch (InvalidOperationException ex)
+            catch (Exception ex)
             {
                 Logger.Error("Error occurred while registering Ka-ching sale in Episerver.", ex);
 
