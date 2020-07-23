@@ -5,11 +5,14 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
 using EPiServer.Core;
+using EPiServer.Logging;
+using HtmlAgilityPack;
 
 namespace KachingPlugIn.Factories
 {
     public class L10nStringFactory
     {
+        private static readonly ILogger Logger = LogManager.GetLogger(typeof(L10nStringFactory));
         private readonly IContentLoader _contentLoader;
 
         public L10nStringFactory(
@@ -34,12 +37,23 @@ namespace KachingPlugIn.Factories
                 var localizedContent = _contentLoader.Get<CatalogContentBase>(content.ContentLink, culture);
 
                 PropertyData data = localizedContent.Property[propertyName];
-                if (data == null || data.IsNull || !(data.Value is string))
+                if (data == null || data.IsNull)
                 {
                     continue;
                 }
 
-                languageDictionary[culture.TwoLetterISOLanguageName] = (string)data.Value;
+                if (data.Value is string stringValue)
+                {
+                    languageDictionary[culture.TwoLetterISOLanguageName] = stringValue;
+                }
+                else if (data.Value is XhtmlString htmlString)
+                {
+                    var html = htmlString.ToEditString();
+                    var htmlDoc = new HtmlDocument();
+                    htmlDoc.LoadHtml(html);
+                    var text = htmlDoc.DocumentNode.InnerText;
+                    languageDictionary[culture.TwoLetterISOLanguageName] = text;
+                }
             }
 
             return new L10nString(languageDictionary);

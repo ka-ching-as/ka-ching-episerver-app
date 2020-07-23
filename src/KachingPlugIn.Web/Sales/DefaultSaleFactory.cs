@@ -3,6 +3,7 @@ using System.Linq;
 using EPiServer.Commerce.Order;
 using EPiServer.Commerce.Order.Internal;
 using EPiServer.Commerce.Storage;
+using EPiServer.Logging;
 using EPiServer.ServiceLocation;
 using Mediachase.Commerce;
 using Mediachase.Commerce.Customers;
@@ -15,6 +16,7 @@ namespace KachingPlugIn.Web.Sales
     [ServiceConfiguration(typeof(ISaleFactory), Lifecycle = ServiceInstanceScope.Singleton)]
     public class DefaultSaleFactory : ISaleFactory
     {
+        private static readonly ILogger Logger = LogManager.GetLogger(typeof(DefaultSaleFactory));
         private readonly IMarketService _marketService;
         private readonly IOrderGroupFactory _orderGroupFactory;
         private readonly IKachingOrderNumberGenerator _orderNumberGenerator;
@@ -72,13 +74,16 @@ namespace KachingPlugIn.Web.Sales
 
             orderForm.Shipments.Clear();
 
+            decimal total = 0;
+
             foreach (var groupedLineItems in kachingSale.Summary
                 .LineItems
                 .GroupBy(li => li.EcomId))
             {
-                var kachingShipping = groupedLineItems
-                    .Select(li => li.Behavior?.Shipping)
-                    .FirstOrDefault(s => s != null);
+                var shippingLineItem = groupedLineItems.FirstOrDefault(li => li.Behavior?.Shipping != null);
+                var kachingShipping = shippingLineItem?.Behavior?.Shipping;
+
+                total += shippingLineItem != null ? shippingLineItem.Total : 0;
 
                 IShipment shipment = CreateShipment(
                     purchaseOrder,
@@ -93,40 +98,36 @@ namespace KachingPlugIn.Web.Sales
 
                 foreach (var kachingLineItem in groupedLineItems)
                 {
+                    // Skip special behavior line items. These are:
+                    // shipping - handled above
+                    // giftcard or voucher purchase
+                    // giftcard or voucher use (can be a line item if they are taxed at point of sale)
+                    // expenses
+                    // customer account deposit
+                    // container deposit
+                    //
+                    // We could consider including container deposit behavior
+                    // but for now we just skip that along with the rest.
+                    if (kachingLineItem.Behavior != null)
+                    {
+                        continue;
+                    }
+
                     ILineItem lineItem = CreateLineItem(purchaseOrder, shipment, kachingSale, kachingLineItem);
                     shipment.LineItems.Add(lineItem);
 
                     PopulateMetaFields(lineItem, market, kachingSale, kachingLineItem);
                     SetCashier(lineItem, kachingSale);
+
+                    total += kachingLineItem.Total;
                 }
             }
 
-            IPayment cashPayment = null;
-            foreach (var kachingPayment in kachingSale.Payments)
-            {
-                switch (kachingPayment.PaymentType)
-                {
-                    // If the cash payment has cash-back and/or rounding, adjust the cash payment amount.
-                    // Cash-back occurs when, for example, a customer pays for 120 DKK with 150 DKK in cash,
-                    // and gets 30 DKK back from the merchant. Episerver does not need this information separately,
-                    // so here we adjusts the cash payment entity with all corrections.
-                    case "cash.cashback" when cashPayment != null:
-                    case "cash.rounding" when cashPayment != null:
-                        cashPayment.Amount += kachingPayment.Amount;
-                        continue;
-                }
+            IPayment payment = CreatePayment(purchaseOrder, customerContact, kachingSale, total);
+            PopulateMetaFields(payment, market, kachingSale);
+            SetCashier(payment, kachingSale);
 
-                IPayment payment = CreatePayment(purchaseOrder, customerContact, kachingSale, kachingPayment);
-                if (kachingPayment.PaymentType == "cash")
-                {
-                    cashPayment = payment;
-                }
-
-                PopulateMetaFields(payment, market, kachingSale, kachingPayment);
-                SetCashier(payment, kachingSale);
-
-                orderForm.Payments.Add(payment);
-            }
+            orderForm.Payments.Add(payment);
 
             return purchaseOrder;
         }
@@ -168,37 +169,14 @@ namespace KachingPlugIn.Web.Sales
             IPurchaseOrder purchaseOrder,
             CustomerContact customerContact,
             SaleViewModel kachingSale,
-            SalePaymentViewModel kachingPayment)
+            decimal amount)
         {
             IPayment payment = _orderGroupFactory.CreatePayment(purchaseOrder);
-            payment.Amount = kachingPayment.Amount;
+            payment.Amount = amount;
             payment.CustomerName = kachingSale.Summary.Customer?.Name;
-            payment.ProviderTransactionID = kachingPayment.Identifier.ToString();
-            payment.Status = (kachingPayment.Success ? PaymentStatus.Processed : PaymentStatus.Failed).ToString();
+            payment.Status = PaymentStatus.Processed.ToString();
             payment.TransactionType = TransactionType.Sale.ToString();
-
-            switch (kachingPayment.PaymentType)
-            {
-                case "cash":
-                case "mobilepay":
-                case "mobilepay.integration":
-                    payment.PaymentType = PaymentType.Other;
-                    break;
-                case "card.external":
-                case "card.izettle":
-                case "card.payex":
-                case "card.verizone":
-                    payment.PaymentType = PaymentType.CreditCard;
-                    break;
-                case "giftcard":
-                    payment.PaymentType = PaymentType.GiftCard;
-                    break;
-                case "customer_account.integration":
-                case "invoice.erp":
-                case "invoice.external":
-                    payment.PaymentType = PaymentType.Invoice;
-                    break;
-            }
+            payment.PaymentType = PaymentType.Other;
 
             return payment;
         }
@@ -264,8 +242,7 @@ namespace KachingPlugIn.Web.Sales
         protected virtual void PopulateMetaFields(
             IPayment payment,
             IMarket market,
-            SaleViewModel kachingSale,
-            SalePaymentViewModel kachingPayment)
+            SaleViewModel kachingSale)
         {
         }
 
@@ -287,6 +264,18 @@ namespace KachingPlugIn.Web.Sales
             else if (kachingSale.Summary?.Customer != null)
             {
                 shipment.ShippingAddress = ConvertToAddress(shipment.ParentOrderGroup, kachingSale.Summary.Customer);
+            }
+
+            if (kachingShipping?.MethodId != null)
+            {
+                try
+                {
+                    shipment.ShippingMethodId = new Guid(kachingShipping.MethodId);
+                }
+                catch
+                {
+                    Logger.Error($"Invalid shipping method id on Ka-ching shipping {kachingShipping.MethodId}");
+                }
             }
         }
 
@@ -332,38 +321,6 @@ namespace KachingPlugIn.Web.Sales
             orderAddress.FirstName = customer.Name;
             orderAddress.Line1 = customer.Street;
             orderAddress.PostalCode = customer.PostalCode;
-
-            return orderAddress;
-        }
-
-        /// <summary>
-        /// Converts a CustomerAddress entity to an OrderAddress entity.
-        /// </summary>
-        protected virtual IOrderAddress ConvertToAddress(
-            CustomerContact contact,
-            CustomerAddress address,
-            IOrderGroup orderGroup)
-        {
-            if (address == null)
-            {
-                return null;
-            }
-
-            var orderAddress = _orderGroupFactory.CreateOrderAddress(orderGroup);
-            orderAddress.City = address.City;
-            orderAddress.CountryCode = address.CountryCode;
-            orderAddress.CountryName = address.CountryName;
-            orderAddress.DaytimePhoneNumber = address.DaytimePhoneNumber;
-            orderAddress.Email = !string.IsNullOrWhiteSpace(address.Email) ? address.Email : contact.Email;
-            orderAddress.EveningPhoneNumber = address.EveningPhoneNumber;
-            orderAddress.FirstName = address.FirstName;
-            orderAddress.LastName = address.LastName;
-            orderAddress.Line1 = address.Line1;
-            orderAddress.Line2 = address.Line2;
-            orderAddress.Organization = address.Organization;
-            orderAddress.PostalCode = address.PostalCode;
-            orderAddress.RegionName = address.RegionName;
-            orderAddress.RegionCode = address.RegionCode;
 
             return orderAddress;
         }

@@ -14,6 +14,8 @@
     <dependencies>
       <dependency id="EPiServer.CMS.Core" version="[11.0.0,12.0.0)" />
       <dependency id="EPiServer.Commerce.Core" version="[13.0.0,14.0.0)" />
+      <dependency id="HtmlAgilityPack" version="1.11.0" />
+      <dependency id="Newtonsoft.Json" version="11.0.1" />
     </dependencies>
   </metadata>
   <files>
