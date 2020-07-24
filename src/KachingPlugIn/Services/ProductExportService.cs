@@ -87,7 +87,7 @@ namespace KachingPlugIn.Services
 
         public void DeleteProducts(IEnumerable<EntryContentBase> catalogEntries)
         {
-            IEnumerable<string> catalogCodes = catalogEntries.Select(c => c.Code.KachingCompatibleKey());
+            IEnumerable<string> catalogCodes = catalogEntries.Select(c => c.Code.SanitizeKey());
 
             APIFacade.Delete(
                 catalogCodes,
@@ -115,7 +115,7 @@ namespace KachingPlugIn.Services
             }
 
             DeleteProductAssets(
-                entries.Select(e => e.Code.KachingCompatibleKey()));
+                entries.Select(e => e.Code.SanitizeKey()));
         }
 
         public void DeleteProductAssets(IEnumerable<string> entryCodes)
@@ -152,7 +152,7 @@ namespace KachingPlugIn.Services
                 foreach (var entry in batch)
                 {
                     assets.Add(
-                        entry.Code.KachingCompatibleKey(),
+                        entry.Code.SanitizeKey(),
                         _productFactory.BuildKaChingProductAssets(entry).ToArray());
                 }
                 APIFacade.Post(
@@ -183,8 +183,8 @@ namespace KachingPlugIn.Services
                     .Batch(BatchSize))
                 {
                     APIFacade.Delete(
-                        batch.Select(s => s.Code.KachingCompatibleKey()),
-                        _configuration.ProductRecommendationsImportUrl + "&recommendation_id=" + associationGroup.Name.KachingCompatibleKey());
+                        batch.Select(s => s.Code.SanitizeKey()),
+                        _configuration.ProductRecommendationsImportUrl + "&recommendation_id=" + associationGroup.Name.SanitizeKey());
                 }
             }
         }
@@ -284,7 +284,9 @@ namespace KachingPlugIn.Services
                 {
                     APIFacade.Post(
                         new { products = group },
-                        _configuration.ProductRecommendationsImportUrl + "&recommendation_id=" + associationsByGroup.Key.KachingCompatibleKey());
+                        _configuration.ProductRecommendationsImportUrl + "&recommendation_id=" + associationsByGroup.Key.SanitizeKey());
+
+                    ExportState.Uploaded += group.Count;
                 }
             }
 
@@ -298,12 +300,12 @@ namespace KachingPlugIn.Services
                 foreach (var batch in _contentLoader
                     .GetItems(entryLinksToDelete, CultureInfo.InvariantCulture)
                     .OfType<EntryContentBase>()
-                    .Select(c => c.Code.KachingCompatibleKey())
+                    .Select(c => c.Code.SanitizeKey())
                     .Batch(BatchSize))
                 {
                     APIFacade.DeleteObject(
                         batch,
-                        _configuration.ProductRecommendationsImportUrl + "&recommendation_id=" + associationGroup.Name.KachingCompatibleKey());
+                        _configuration.ProductRecommendationsImportUrl + "&recommendation_id=" + associationGroup.Name.SanitizeKey());
                 }
             }
         }
@@ -386,7 +388,7 @@ namespace KachingPlugIn.Services
             foreach (var node in nodes)
             {
                 var nextTags = new List<string>();
-                nextTags.Add(node.Code.KachingCompatibleKey());
+                nextTags.Add(node.Code.SanitizeKey());
                 nextTags.AddRange(tags);
 
                 var childrenNodes = _contentLoader.GetChildren<NodeContent>(node.ContentLink);
@@ -438,12 +440,12 @@ namespace KachingPlugIn.Services
                         if (assets == null)
                         {
                             entriesWithoutAssets.Add(
-                                childEntry.Code.KachingCompatibleKey());
+                                childEntry.Code.SanitizeKey());
                         }
                         else
                         {
                             productAssets.Add(
-                                childEntry.Code.KachingCompatibleKey(),
+                                childEntry.Code.SanitizeKey(),
                                 assets);
                         }
                         break;
@@ -458,7 +460,7 @@ namespace KachingPlugIn.Services
 
             if (_contentLoader.TryGet(link, out NodeContent category))
             {
-                result.Add(category.Code.KachingCompatibleKey());
+                result.Add(category.Code.SanitizeKey());
                 result.AddRange(ParentTagsForCategory(category));
             }
             else
@@ -478,7 +480,7 @@ namespace KachingPlugIn.Services
                 .OfType<NodeContent>();
             foreach (var ancestor in ancestors)
             {
-                result.Add(ancestor.Code.KachingCompatibleKey());
+                result.Add(ancestor.Code.SanitizeKey());
             }
 
             return result;

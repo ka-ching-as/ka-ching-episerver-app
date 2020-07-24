@@ -119,7 +119,7 @@ namespace KachingPlugIn.Services
 
                 var tag = new Tag();
 
-                tag.TagValue = node.Code.KachingCompatibleKey();
+                tag.TagValue = node.Code.SanitizeKey();
 
                 tag.Name = _l10nStringFactory.GetLocalizedString(node, nameof(node.DisplayName));
 

@@ -73,12 +73,12 @@ namespace KachingPlugIn.Factories
                     continue;
                 }
 
-                childCodes.Add(childEntry.Code.KachingCompatibleKey());
+                childCodes.Add(childEntry.Code.SanitizeKey());
             }
 
             return new RecommendationGroup
             {
-                ProductId = entry.Code.KachingCompatibleKey(),
+                ProductId = entry.Code.SanitizeKey(),
                 Recommendations = childCodes
             };
         }
@@ -91,7 +91,7 @@ namespace KachingPlugIn.Factories
         {
             var kachingProduct = new Product();
 
-            kachingProduct.Id = product.Code.KachingCompatibleKey();
+            kachingProduct.Id = product.Code.SanitizeKey();
             kachingProduct.Barcode = GetPropertyStringValue(product, configuration.SystemMappings.BarcodeMetaField);
             kachingProduct.Name = _l10nStringFactory.GetLocalizedString(product, nameof(product.DisplayName));
             kachingProduct.Description = _l10nStringFactory.GetLocalizedString(product, configuration.SystemMappings.DescriptionMetaField);
@@ -163,7 +163,7 @@ namespace KachingPlugIn.Factories
                 // then put all variant properties on the product instead.
                 var variant = variants.First();
 
-                kachingProduct.Id = variant.Code.KachingCompatibleKey();
+                kachingProduct.Id = variant.Code.SanitizeKey();
                 kachingProduct.Barcode = GetPropertyStringValue(variant, configuration.SystemMappings.BarcodeMetaField);
                 kachingProduct.Name = _l10nStringFactory.GetLocalizedString(variant, nameof(variant.DisplayName));
 
@@ -204,7 +204,7 @@ namespace KachingPlugIn.Factories
                     }
 
                     var kachingVariant = new Variant();
-                    kachingVariant.Id = variant.Code.KachingCompatibleKey();
+                    kachingVariant.Id = variant.Code.SanitizeKey();
                     kachingVariant.Barcode = GetPropertyStringValue(variant, configuration.SystemMappings.BarcodeMetaField);
 
                     var variantName = _l10nStringFactory.GetLocalizedString(variant, nameof(variant.DisplayName));
@@ -331,7 +331,7 @@ namespace KachingPlugIn.Factories
                     continue;
                 }
 
-                var marketKey = market.MarketId.Value.KachingCompatibleKey();
+                var marketKey = market.MarketId.Value.SanitizeKey();
                 kachingMarkets[marketKey] = true;
             }
 
@@ -514,7 +514,7 @@ namespace KachingPlugIn.Factories
                     continue;
                 }
 
-                var marketKey = market.MarketId.Value.KachingCompatibleKey();
+                var marketKey = market.MarketId.Value.SanitizeKey();
                 prices[marketKey] = priceValue.UnitPrice.Amount;
             }
 
