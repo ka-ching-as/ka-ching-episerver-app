@@ -67,8 +67,6 @@ namespace KachingPlugIn.Services
                     ExportAllProductAssets();
                     ExportAllProductRecommendations();
 
-                    ExportAllProductAssets();
-
                     ResetState(false);
                 }
                 catch (WebException e)
