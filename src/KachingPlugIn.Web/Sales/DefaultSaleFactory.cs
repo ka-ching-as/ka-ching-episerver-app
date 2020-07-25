@@ -84,7 +84,7 @@ namespace KachingPlugIn.Web.Sales
                 var shippingLineItem = groupedLineItems.FirstOrDefault(li => li.Behavior?.Shipping != null);
                 var kachingShipping = shippingLineItem?.Behavior?.Shipping;
 
-                total += shippingLineItem != null ? shippingLineItem.Total : 0;
+                total += shippingLineItem?.Total ?? 0;
 
                 IShipment shipment = CreateShipment(
                     purchaseOrder,
@@ -267,16 +267,10 @@ namespace KachingPlugIn.Web.Sales
                 shipment.ShippingAddress = ConvertToAddress(shipment.ParentOrderGroup, kachingSale.Summary.Customer);
             }
 
-            if (kachingShipping?.MethodId != null)
+            if (kachingShipping?.MethodId != null &&
+                Guid.TryParse(kachingShipping.MethodId, out Guid shippingMethodId))
             {
-                try
-                {
-                    shipment.ShippingMethodId = new Guid(kachingShipping.MethodId);
-                }
-                catch
-                {
-                    Logger.Error($"Invalid shipping method id on Ka-ching shipping {kachingShipping.MethodId}");
-                }
+                shipment.ShippingMethodId = shippingMethodId;
             }
         }
 
