@@ -4,7 +4,7 @@ namespace KachingPlugIn
 {
     public static class EnumerableExtensions
     {
-        public static IEnumerable<IEnumerable<T>> Batch<T>(
+        public static IEnumerable<ICollection<T>> Batch<T>(
             this IEnumerable<T> collection,
             int batchSize)
         {

@@ -58,7 +58,8 @@ namespace KachingPlugIn.Services
                 ExportState.Busy = true;
             }
 
-            Task.Run(() => {
+            Task.Run(() =>
+            {
                 try
                 {
                     ExportCategoryStructure(tagsUrl, foldersUrl);
@@ -86,19 +87,14 @@ namespace KachingPlugIn.Services
 
             var result = BuildTagsAndFolders(children);
 
-            if (ExportState != null)
-            {
-                ExportState.Total = result.Folders.Aggregate(0, (a, f) => a + f.CountNodesInTree()) + result.Tags.Count;
-            }
-
+            ExportState.ModelName = "tags and folders";
+            ExportState.Total = result.Folders.Aggregate(0, (a, f) => a + f.CountNodesInTree()) + result.Tags.Count;
+            
             Post(result.Tags.Values.ToList(), tagsUrl);
-
-            if (ExportState != null)
-            {
-                ExportState.Uploaded += result.Tags.Count;
-            }
+            ExportState.Uploaded += result.Tags.Count;
 
             Post(result.Folders, foldersUrl);
+            ExportState.Uploaded += result.Folders.Count;
 
             ResetState(false);
         }
@@ -163,6 +159,8 @@ namespace KachingPlugIn.Services
             ExportState.Uploaded = 0;
             ExportState.Polls = 0;
             ExportState.Error = error;
+            ExportState.Action = string.Empty;
+            ExportState.ModelName = string.Empty;
         }
     }
 }
