@@ -12,6 +12,8 @@ namespace KachingPlugIn.Services
         public int Total { get; set; }
         public int Polls { get; set; }
         public bool Error { get; set; }
+        public string Action { get; set; }
+        public string ModelName { get; set; }
 
         public CategoryExportSingleton(CategoryExportService categoryExportService)
         {

@@ -98,7 +98,7 @@ namespace KachingPlugIn.Web.KachingPlugIn.Controllers
                 result.Exported = _productExport.Uploaded;
                 result.Polls = _productExport.Polls;
                 result.Error = _productExport.Error;
-                result.ModelName = "products";
+                result.ModelName = _productExport.ModelName;
             }
             else if (_categoryExport.Busy)
             {
@@ -107,7 +107,7 @@ namespace KachingPlugIn.Web.KachingPlugIn.Controllers
                 result.Exported = _categoryExport.Uploaded;
                 result.Polls = _categoryExport.Polls;
                 result.Error = _categoryExport.Error;
-                result.ModelName = "tags and folders";
+                result.ModelName = _categoryExport.ModelName;
             }
             else
             {
@@ -116,6 +116,7 @@ namespace KachingPlugIn.Web.KachingPlugIn.Controllers
                 result.Exported = 0;
                 result.Polls = 0;
                 result.Error = false;
+                result.Action = string.Empty;
                 result.ModelName = string.Empty;
             }
             

@@ -7,5 +7,7 @@
         int Total { get; set; }
         int Polls { get; set; }
         bool Error { get; set; }
+        string Action { get; set; }
+        string ModelName { get; set; }
     }
 }
