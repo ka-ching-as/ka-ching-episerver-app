@@ -3,7 +3,6 @@ using System.Linq;
 using EPiServer.Commerce.Order;
 using EPiServer.Commerce.Order.Internal;
 using EPiServer.Commerce.Storage;
-using EPiServer.Logging;
 using EPiServer.ServiceLocation;
 using KachingPlugIn.Helpers;
 using Mediachase.Commerce;
@@ -17,7 +16,6 @@ namespace KachingPlugIn.Web.Sales
     [ServiceConfiguration(typeof(ISaleFactory), Lifecycle = ServiceInstanceScope.Singleton)]
     public class DefaultSaleFactory : ISaleFactory
     {
-        private static readonly ILogger Logger = LogManager.GetLogger(typeof(DefaultSaleFactory));
         private readonly IMarketService _marketService;
         private readonly IOrderGroupFactory _orderGroupFactory;
         private readonly IKachingOrderNumberGenerator _orderNumberGenerator;
@@ -75,7 +73,7 @@ namespace KachingPlugIn.Web.Sales
 
             orderForm.Shipments.Clear();
 
-            decimal total = 0;
+            decimal orderTotal = 0;
 
             foreach (var groupedLineItems in kachingSale.Summary
                 .LineItems
@@ -84,14 +82,16 @@ namespace KachingPlugIn.Web.Sales
                 var shippingLineItem = groupedLineItems.FirstOrDefault(li => li.Behavior?.Shipping != null);
                 var kachingShipping = shippingLineItem?.Behavior?.Shipping;
 
-                total += shippingLineItem?.Total ?? 0;
+                decimal shipmentTotal = 0;
+                decimal shippingFeeTotal = shippingLineItem?.Total ?? 0;
 
                 IShipment shipment = CreateShipment(
                     purchaseOrder,
                     orderForm,
                     customerContact,
                     kachingShipping,
-                    kachingSale);
+                    kachingSale,
+                    shippingLineItem);
                 orderForm.Shipments.Add(shipment);
 
                 PopulateMetaFields(shipment, market, kachingShipping, kachingSale);
@@ -120,11 +120,29 @@ namespace KachingPlugIn.Web.Sales
                     PopulateMetaFields(lineItem, market, kachingSale, kachingLineItem);
                     SetCashier(lineItem, kachingSale);
 
-                    total += kachingLineItem.Total;
+                    shipmentTotal += kachingLineItem.Total;
                 }
+
+                // Populate all shipment amount fields, even those that need casting to reach.
+                if (shipment is IShipmentCalculatedAmount calculatedAmount)
+                {
+                    calculatedAmount.IsShippingCostUpToDate = true;
+                    calculatedAmount.IsShippingTaxUpToDate = true;
+                    calculatedAmount.ShippingCost = shippingLineItem?.Total ?? 0;
+                    calculatedAmount.ShippingTax = shippingLineItem?.TotalTax ?? 0;
+                }
+
+                if (shipment is Shipment shipment1)
+                {
+                    shipment1.ShippingSubTotal = shippingLineItem?.Total ?? 0;
+                    shipment1.SubTotal = shipmentTotal;
+                }
+
+                shipmentTotal += shippingFeeTotal;
+                orderTotal += shipmentTotal;
             }
 
-            IPayment payment = CreatePayment(purchaseOrder, customerContact, kachingSale, total);
+            IPayment payment = CreatePayment(purchaseOrder, customerContact, kachingSale, orderTotal);
             PopulateMetaFields(payment, market, kachingSale);
             SetCashier(payment, kachingSale);
 
@@ -187,7 +205,8 @@ namespace KachingPlugIn.Web.Sales
             IOrderForm orderForm,
             CustomerContact customerContact,
             SaleShippingViewModel kachingShipping,
-            SaleViewModel kachingSale)
+            SaleViewModel kachingSale,
+            SaleLineItemViewModel shippingLineItem)
         {
             IShipment shipment = _orderGroupFactory.CreateShipment(purchaseOrder);
             shipment.OrderShipmentStatus = kachingShipping != null
