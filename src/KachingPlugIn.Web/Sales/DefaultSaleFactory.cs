@@ -5,6 +5,7 @@ using EPiServer.Commerce.Order.Internal;
 using EPiServer.Commerce.Storage;
 using EPiServer.Logging;
 using EPiServer.ServiceLocation;
+using KachingPlugIn.Helpers;
 using Mediachase.Commerce;
 using Mediachase.Commerce.Customers;
 using Mediachase.Commerce.Markets;
@@ -139,7 +140,7 @@ namespace KachingPlugIn.Web.Sales
             SaleLineItemViewModel kachingLineItem)
         {
             ILineItem lineItem = _orderGroupFactory.CreateLineItem(
-                kachingLineItem.VariantId ?? kachingLineItem.Id,
+                kachingLineItem.VariantId.DesanitizeKey() ?? kachingLineItem.Id.DesanitizeKey(),
                 purchaseOrder);
 
             decimal quantity = kachingLineItem.UnitCount ?? kachingLineItem.Quantity;
