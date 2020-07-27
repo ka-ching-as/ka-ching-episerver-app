@@ -67,8 +67,6 @@ namespace KachingPlugIn.Services
                     ExportAllProductAssets();
                     ExportAllProductRecommendations();
 
-                    ExportAllProductAssets();
-
                     ResetState(false);
                 }
                 catch (WebException e)
@@ -274,6 +272,11 @@ namespace KachingPlugIn.Services
             foreach (var associationsByGroup in allAssociations
                 .GroupBy(a => a.Group.Name))
             {
+                ExportState.Action = "Exported";
+                ExportState.ModelName = $"product associations ({associationsByGroup.Key})";
+                ExportState.Total = associationsByGroup.Count();
+                ExportState.Uploaded = 0;
+
                 var recommendationGroups = associationsByGroup
                     .GroupBy(a => a.Source)
                     .Select(g => _productFactory.BuildKaChingRecommendationGroup(g.Key, g.ToArray()))
@@ -297,6 +300,11 @@ namespace KachingPlugIn.Services
 
             foreach (var associationGroup in _associationGroupRepository.List())
             {
+                ExportState.Action = "Deleted";
+                ExportState.ModelName = $"product associations ({associationGroup.Name})";
+                ExportState.Total = entryLinksToDelete.Count;
+                ExportState.Uploaded = 0;
+
                 foreach (var batch in _contentLoader
                     .GetItems(entryLinksToDelete, CultureInfo.InvariantCulture)
                     .OfType<EntryContentBase>()
@@ -306,6 +314,8 @@ namespace KachingPlugIn.Services
                     APIFacade.DeleteObject(
                         batch,
                         _configuration.ProductRecommendationsImportUrl + "&recommendation_id=" + associationGroup.Name.SanitizeKey());
+
+                    ExportState.Uploaded += batch.Count;
                 }
             }
         }
@@ -333,6 +343,8 @@ namespace KachingPlugIn.Services
 
             if (ExportState != null)
             {
+                ExportState.Action = "Exported";
+                ExportState.ModelName = "products";
                 ExportState.Total = products.Count;
             }
 
@@ -347,7 +359,7 @@ namespace KachingPlugIn.Services
             var root = _contentLoader.GetChildren<CatalogContent>(_referenceConverter.GetRootLink());
             BuildKachingProductAssets(root.FirstOrDefault(), assets, entriesWithoutAssets);
 
-            if (assets.Count == 0)
+            if (assets.Count == 0 && entriesWithoutAssets.Count == 0)
             {
                 return;
             }
@@ -357,10 +369,11 @@ namespace KachingPlugIn.Services
                 return;
             }
 
-            if (ExportState != null)
-            {
-                ExportState.Total = assets.Count;
-            }
+            ResetState(false);
+            ExportState.Busy = true;
+            ExportState.Action = "Exported";
+            ExportState.ModelName = "product assets";
+            ExportState.Total = assets.Count + entriesWithoutAssets.Count;
 
             // Push assets groups for products that have assets.
             foreach (var batch in assets.Batch(BatchSize))
@@ -368,16 +381,20 @@ namespace KachingPlugIn.Services
                 APIFacade.Post(
                     new { assets = batch },
                     _configuration.ProductAssetsImportUrl);
+
+                ExportState.Uploaded += batch.Count;
             }
 
             // Delete asset groups for products that have no assets (even if they do not exist in Ka-ching).
             // This is to enforce no assets for products that have no assets, even if an individual deletion was missed earlier.
+            ExportState.Action = "Deleted";
+
             foreach (var batch in entriesWithoutAssets.Batch(BatchSize))
             {
                 APIFacade.Delete(batch, _configuration.ProductAssetsImportUrl);
-            }
 
-            ResetState(false);
+                ExportState.Uploaded += batch.Count;
+            }
         }
 
         private IList<Product> BuildKachingProducts(IEnumerable<NodeContent> nodes, IList<string> tags)
@@ -539,6 +556,8 @@ namespace KachingPlugIn.Services
             ExportState.Uploaded = 0;
             ExportState.Polls = 0;
             ExportState.Error = error;
+            ExportState.Action = string.Empty;
+            ExportState.ModelName = string.Empty;
         }
     }
 }

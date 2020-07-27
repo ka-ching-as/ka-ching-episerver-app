@@ -45,7 +45,7 @@ namespace KachingPlugIn.Web.Sales
 
             // Ignore sales without any non special line items
             var saleLines = sale.Summary.LineItems.Where(lineItem => lineItem.Behavior == null);
-            if (saleLines.Count() == 0)
+            if (!saleLines.Any())
             {
                 return StatusCode(HttpStatusCode.NoContent);
             }
