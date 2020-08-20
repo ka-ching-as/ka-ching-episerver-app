@@ -138,7 +138,7 @@ namespace KachingPlugIn.EventHandlers
                 _cache.Remove("EP:ECF:Ass:" + entryRef.ID);
             }
 
-            _productExportService.ExportProductRecommendations(affectedProductLinks);
+            _productExportService.ExportProductRecommendations(affectedProductLinks, null);
         }
 
         public void EntryDeleted(CatalogContentUpdateEventArgs e)
