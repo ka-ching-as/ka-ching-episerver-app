@@ -38,7 +38,6 @@
     <Compile Include="EnumerableExtensions.cs" />
     <Compile Include="CommerceMediaComparer.cs" />
     <Compile Include="EventHandlers\CatalogContentEventListener.cs" />
-    <Compile Include="EventHandlers\CatalogKeyEventHandler.cs" />
     <Compile Include="EventInitialization.cs" />
     <Compile Include="Factories\L10nStringFactory.cs" />
     <Compile Include="Factories\ProductFactory.cs" />
