@@ -74,6 +74,9 @@ namespace KachingPlugIn.EventHandlers
 
             switch (e1.EventType)
             {
+                case CatalogEventBroadcaster.AssociationDeletedEventType:
+                    AssociationUpdated(e1);
+                    break;
                 case CatalogEventBroadcaster.AssociationUpdatedEventType:
                     AssociationUpdated(e1);
                     break;
