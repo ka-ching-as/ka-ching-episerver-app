@@ -194,6 +194,12 @@ namespace KachingPlugIn.Web.Sales
                 ? OrderShipmentStatus.AwaitingInventory
                 : OrderShipmentStatus.Shipped;
 
+            if (kachingShipping != null)
+            {
+                // If this shipment is awaiting delivery, then the whole order is still in-progress.
+                purchaseOrder.OrderStatus = OrderStatus.InProgress;
+            }
+
             return shipment;
         }
 
@@ -211,6 +217,8 @@ namespace KachingPlugIn.Web.Sales
             purchaseOrder.PricesIncludeTax = market.PricesIncludeTax;
 
             purchaseOrder.OrderNumber = _orderNumberGenerator.GenerateOrderNumber(kachingSale.SequenceNumber);
+            // Default status is Completed. It will be changed when handling shipments, if there are pending line items.
+            purchaseOrder.OrderStatus = OrderStatus.Completed;
             purchaseOrder.Properties["CustomerName"] = kachingSale.Summary.Customer?.Name;
         }
 
