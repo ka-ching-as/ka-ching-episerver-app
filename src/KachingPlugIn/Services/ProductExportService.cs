@@ -219,10 +219,10 @@ namespace KachingPlugIn.Services
                 return;
             }
 
-            ExportProductRecommendations(catalog);
+            ExportProductRecommendations(catalog, ExportState);
         }
 
-        public void ExportProductRecommendations(NodeContentBase node)
+        public void ExportProductRecommendations(NodeContentBase node, IExportState exportState)
         {
             if (node == null)
             {
@@ -242,10 +242,10 @@ namespace KachingPlugIn.Services
                 .OfType<EntryContentBase>()
                 .Select(c => c.ContentLink);
 
-            ExportProductRecommendations(entryRefs);
+            ExportProductRecommendations(entryRefs, exportState);
         }
 
-        public void ExportProductRecommendations(IEnumerable<ContentReference> entryLinks)
+        public void ExportProductRecommendations(IEnumerable<ContentReference> entryLinks, IExportState exportState)
         {
             if (!_configuration.ProductRecommendationsImportUrl.IsValidProductRecommendationsImportUrl())
             {
@@ -272,10 +272,13 @@ namespace KachingPlugIn.Services
             foreach (var associationsByGroup in allAssociations
                 .GroupBy(a => a.Group.Name))
             {
-                ExportState.Action = "Exported";
-                ExportState.ModelName = $"product associations ({associationsByGroup.Key})";
-                ExportState.Total = associationsByGroup.Count();
-                ExportState.Uploaded = 0;
+                if (exportState != null)
+                {
+                    exportState.Action = "Exported";
+                    exportState.ModelName = $"product associations ({associationsByGroup.Key})";
+                    exportState.Total = associationsByGroup.Count();
+                    exportState.Uploaded = 0;
+                }
 
                 var recommendationGroups = associationsByGroup
                     .GroupBy(a => a.Source)
@@ -289,7 +292,10 @@ namespace KachingPlugIn.Services
                         new { products = group },
                         _configuration.ProductRecommendationsImportUrl + "&recommendation_id=" + associationsByGroup.Key.SanitizeKey());
 
-                    ExportState.Uploaded += group.Count;
+                    if (exportState != null)
+                    {
+                        exportState.Uploaded += group.Count;
+                    }
                 }
             }
 
@@ -300,10 +306,13 @@ namespace KachingPlugIn.Services
 
             foreach (var associationGroup in _associationGroupRepository.List())
             {
-                ExportState.Action = "Deleted";
-                ExportState.ModelName = $"product associations ({associationGroup.Name})";
-                ExportState.Total = entryLinksToDelete.Count;
-                ExportState.Uploaded = 0;
+                if (exportState != null)
+                {
+                    exportState.Action = "Deleted";
+                    exportState.ModelName = $"product associations ({associationGroup.Name})";
+                    exportState.Total = entryLinksToDelete.Count;
+                    exportState.Uploaded = 0;
+                }
 
                 foreach (var batch in _contentLoader
                     .GetItems(entryLinksToDelete, CultureInfo.InvariantCulture)
@@ -315,7 +324,10 @@ namespace KachingPlugIn.Services
                         batch,
                         _configuration.ProductRecommendationsImportUrl + "&recommendation_id=" + associationGroup.Name.SanitizeKey());
 
-                    ExportState.Uploaded += batch.Count;
+                    if (exportState != null)
+                    {
+                        exportState.Uploaded += batch.Count;
+                    }
                 }
             }
         }
