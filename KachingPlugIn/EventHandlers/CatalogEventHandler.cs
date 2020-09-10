@@ -1,13 +1,14 @@
 ﻿using EPiServer;
 using EPiServer.Commerce.Catalog.ContentTypes;
+using EPiServer.Commerce.Catalog.Linking;
 using EPiServer.Core;
 using EPiServer.Logging;
 using KachingPlugIn.Helpers;
-using KachingPlugIn.Models;
 using KachingPlugIn.Services;
 using Mediachase.Commerce.Catalog;
 using Mediachase.Commerce.Engine.Events;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using KachingPlugIn.Configuration;
 
@@ -30,6 +31,7 @@ namespace KachingPlugIn.EventHandlers
         private readonly IContentLoader _contentLoader;
         private readonly CategoryExportService _categoryExportService;
         private readonly ProductExportService _productExportService;
+        private readonly IRelationRepository _relationRepository;
 
         private NodeContent DeletingCategory = null;
 
@@ -39,7 +41,8 @@ namespace KachingPlugIn.EventHandlers
             ReferenceConverter referenceConverter,
             IContentLoader contentLoader,
             CategoryExportService categoryExportService,
-            ProductExportService productExportService)
+            ProductExportService productExportService,
+            IRelationRepository relationRepository)
         {
             _catalogKeyEventBroadcaster = catalogKeyEventBroadcaster;
             _contentEvents = contentEvents;
@@ -47,6 +50,7 @@ namespace KachingPlugIn.EventHandlers
             _contentLoader = contentLoader;
             _categoryExportService = categoryExportService;
             _productExportService = productExportService;
+            _relationRepository = relationRepository;
         }
         public void Initialize()
         {
@@ -233,15 +237,40 @@ namespace KachingPlugIn.EventHandlers
         {
             _log.Information("HandleVariantChange: " + variant.Code);
 
+            var configuration = KachingConfiguration.Instance;
+
             var parents = variant.GetParentProducts();
             foreach (var parent in parents)
             {
                 var product = _contentLoader.Get<ProductContent>(parent);
 
-                // Since a variants are not independent datatypes in Ka-ching 
-                // a variant change is always a product update and not a delete
-                var deletedVariantCode = isDelete ? variant.Code : null;
-                HandleProductChange(product, false, deletedVariantCode);
+                IEnumerable<ContentReference> variantRefs = _relationRepository
+                .GetChildren<ProductVariation>(product.ContentLink)
+                .Select(r => r.Child);
+
+                ICollection<VariationContent> variants = _contentLoader
+                    .GetItems(variantRefs, LanguageSelector.MasterLanguage())
+                    .OfType<VariationContent>()
+                    .ToArray();
+
+                if (variants.Count == 1 && configuration.ExportSingleVariantAsProduct && isDelete)
+                {
+                    // Make sure we have valid import endpoints configured before handling the change
+                    if (!configuration.ProductsImportUrl.IsValidProductsImportUrl())
+                    {
+                        _log.Error("Ka-ching product import url is not valid: " + configuration.ProductsImportUrl);
+                        return;
+                    }
+
+                    _productExportService.DeleteSingleVariantProduct(variant, configuration.ProductsImportUrl);
+                }
+                else 
+                {
+                    // Since variants are not independent datatypes in Ka-ching 
+                    // a variant change is always a product update and not a delete
+                    var deletedVariantCode = isDelete ? variant.Code : null;
+                    HandleProductChange(product, false, deletedVariantCode);
+                }
             }
         }
 

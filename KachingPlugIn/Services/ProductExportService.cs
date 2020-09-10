@@ -86,6 +86,24 @@ namespace KachingPlugIn.Services
             _log.Information("Status code: " + statusCode.ToString());
         }
 
+        public void DeleteSingleVariantProduct(VariationContent variant, string url)
+        {
+            _log.Information("DeleteSingleVariantProduct: " + variant.Code);
+
+            // Bail if not published
+            var isPublished = _contentVersionRepository.ListPublished(variant.ContentLink).Count() > 0;
+            if (!isPublished)
+            {
+                _log.Information("Skipped single variant product delete because it's not yet published");
+                return;
+            }
+
+            var ids = new List<string>();
+            ids.Add(variant.Code.KachingCompatibleKey());
+            var statusCode = APIFacade.Delete(ids, url);
+            _log.Information("Status code: " + statusCode.ToString());
+        }
+
         public void DeleteChildProducts(NodeContent category, string url)
         {
             _log.Information("DeleteChildProducts: " + category.Code);

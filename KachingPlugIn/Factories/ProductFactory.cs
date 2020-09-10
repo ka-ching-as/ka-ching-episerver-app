@@ -15,7 +15,6 @@ using System.Collections.Generic;
 using System.Linq;
 using EPiServer.Web;
 using EPiServer.Logging;
-using KachingPlugIn.KachingPlugIn.Models;
 using Mediachase.Commerce;
 
 namespace KachingPlugIn.Factories
