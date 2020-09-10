@@ -237,7 +237,7 @@ namespace KachingPlugIn.Factories
                     continue;
                 }
 
-                var marketKey = market.MarketId.Value.KachingCompatibleKey();
+                var marketKey = market.MarketId.Value.SanitizeKey();
                 kachingMarkets[marketKey] = true;
             }
 
@@ -420,7 +420,7 @@ namespace KachingPlugIn.Factories
                     continue;
                 }
 
-                var marketKey = market.MarketId.Value.KachingCompatibleKey();
+                var marketKey = market.MarketId.Value.SanitizeKey();
                 prices[marketKey] = priceValue.UnitPrice.Amount;
             }
 

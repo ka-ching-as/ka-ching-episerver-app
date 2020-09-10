@@ -81,7 +81,7 @@ namespace KachingPlugIn.Services
             }
 
             var ids = new List<string>();
-            ids.Add(product.Code.KachingCompatibleKey());
+            ids.Add(product.Code.SanitizeKey());
             var statusCode = APIFacade.Delete(ids, url);
             _log.Information("Status code: " + statusCode.ToString());
         }
@@ -99,7 +99,7 @@ namespace KachingPlugIn.Services
             }
 
             var ids = new List<string>();
-            ids.Add(variant.Code.KachingCompatibleKey());
+            ids.Add(variant.Code.SanitizeKey());
             var statusCode = APIFacade.Delete(ids, url);
             _log.Information("Status code: " + statusCode.ToString());
         }
@@ -177,7 +177,7 @@ namespace KachingPlugIn.Services
             foreach (var node in nodes)
             {
                 var nextTags = new List<string>();
-                nextTags.Add(node.Code.KachingCompatibleKey());
+                nextTags.Add(node.Code.SanitizeKey());
                 nextTags.AddRange(tags);
 
                 var childrenNodes = _contentLoader.GetChildren<NodeContent>(node.ContentLink);
@@ -214,7 +214,7 @@ namespace KachingPlugIn.Services
 
             if (_contentLoader.TryGet(link, out NodeContent category))
             {
-                result.Add(category.Code.KachingCompatibleKey());
+                result.Add(category.Code.SanitizeKey());
                 result.AddRange(ParentTagsForCategory(category));
             }
             else
@@ -235,7 +235,7 @@ namespace KachingPlugIn.Services
                 .OfType<NodeContent>();
             foreach (var ancestor in ancestors)
             {
-                result.Add(ancestor.Code.KachingCompatibleKey());
+                result.Add(ancestor.Code.SanitizeKey());
             }
 
             return result;

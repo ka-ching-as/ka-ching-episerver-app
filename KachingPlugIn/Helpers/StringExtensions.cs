@@ -1,21 +1,51 @@
 ﻿using System;
+using System.Text;
 
 namespace KachingPlugIn.Helpers
 {
     public static class StringExtensions
     {
-        public static string KachingCompatibleKey(this string key)
+        /// <summary>
+        /// Returns a key that is safe to import in Ka-ching by replacing certain characters.
+        /// </summary>
+        public static string SanitizeKey(this string key)
         {
-            return key.
-                ToLower()
-                .Replace(' ', '_')
-                .Replace('*', '_')
-                .Replace('/', '_')
-                .Replace('.', '_')
-                .Replace('$', '_')
-                .Replace('[', '_')
-                .Replace(']', '_')
-                .Replace('#', '_');
+            if (key == null)
+            {
+                return null;
+            }
+
+            var sb = new StringBuilder(key);
+            sb.Replace("_", "%5F");
+            sb.Replace(".", "%2E");
+            sb.Replace("$", "%24");
+            sb.Replace("#", "%23");
+            sb.Replace("[", "%5B");
+            sb.Replace("]", "%5D");
+            sb.Replace("/", "%2F");
+            sb.Replace("*", "%2A");
+
+            return sb.ToString();
+        }
+
+        public static string DesanitizeKey(this string key)
+        {
+            if (key == null)
+            {
+                return null;
+            }
+
+            var sb = new StringBuilder(key);
+            sb.Replace("%5F", "_");
+            sb.Replace("%2E", ".");
+            sb.Replace("%24", "$");
+            sb.Replace("%23", "#");
+            sb.Replace("%5B", "[");
+            sb.Replace("%5D", "]");
+            sb.Replace("%2F", "/");
+            sb.Replace("%2A", "*");
+
+            return sb.ToString();
         }
 
         public static bool IsValidProductsImportUrl(this string url)
