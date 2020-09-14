@@ -13,11 +13,30 @@ namespace KachingPlugIn.Helpers
 
         public static HttpStatusCode Delete(IList<string> ids, string url)
         {
-            var deleteUrl = url + "&ids=" + string.Join(",", ids);
+            var deleteUrl = url;
             _log.Information("Delete url: " + deleteUrl);
 
             WebRequest request = WebRequest.Create(deleteUrl);
             request.Method = "DELETE";
+            request.ContentType = "application/json";
+
+            var model = new
+            {
+                ids = ids
+            };
+
+            using (Stream dataStream = request.GetRequestStream())
+            using (StreamWriter streamWriter = new StreamWriter(dataStream))
+            {
+                JsonSerializer serializer = new JsonSerializer();
+                serializer.ContractResolver = new DefaultContractResolver
+                {
+                    NamingStrategy = new SnakeCaseNamingStrategy()
+                };
+                serializer.NullValueHandling = NullValueHandling.Ignore;
+
+                serializer.Serialize(streamWriter, model);
+            }
 
             HttpWebResponse response = request.GetResponse() as HttpWebResponse;
 

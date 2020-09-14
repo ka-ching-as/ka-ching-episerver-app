@@ -15,7 +15,6 @@ using System.Collections.Generic;
 using System.Linq;
 using EPiServer.Web;
 using EPiServer.Logging;
-using KachingPlugIn.KachingPlugIn.Models;
 using Mediachase.Commerce;
 
 namespace KachingPlugIn.Factories
@@ -57,7 +56,7 @@ namespace KachingPlugIn.Factories
         {
             var kachingProduct = new Product();
 
-            kachingProduct.Id = product.Code;
+            kachingProduct.Id = product.Code.SanitizeKey();
             kachingProduct.Barcode = GetPropertyStringValue(product, configuration.SystemMappings.BarcodeMetaField);
             kachingProduct.Name = _l10nStringFactory.GetLocalizedString(product, nameof(product.DisplayName));
             kachingProduct.Description = _l10nStringFactory.GetLocalizedString(product, configuration.SystemMappings.DescriptionMetaField);
@@ -129,7 +128,7 @@ namespace KachingPlugIn.Factories
                 // then put all variant properties on the product instead.
                 var variant = variants.First();
 
-                kachingProduct.Id = variant.Code;
+                kachingProduct.Id = variant.Code.SanitizeKey();
                 kachingProduct.Barcode = GetPropertyStringValue(variant, configuration.SystemMappings.BarcodeMetaField);
                 kachingProduct.Name = _l10nStringFactory.GetLocalizedString(variant, nameof(variant.DisplayName));
 
@@ -170,7 +169,7 @@ namespace KachingPlugIn.Factories
                     }
 
                     var kachingVariant = new Variant();
-                    kachingVariant.Id = variant.Code;
+                    kachingVariant.Id = variant.Code.SanitizeKey();
                     kachingVariant.Barcode = GetPropertyStringValue(variant, configuration.SystemMappings.BarcodeMetaField);
 
                     var variantName = _l10nStringFactory.GetLocalizedString(variant, nameof(variant.DisplayName));
@@ -238,7 +237,7 @@ namespace KachingPlugIn.Factories
                     continue;
                 }
 
-                var marketKey = market.MarketId.Value.KachingCompatibleKey();
+                var marketKey = market.MarketId.Value.SanitizeKey();
                 kachingMarkets[marketKey] = true;
             }
 
@@ -421,7 +420,7 @@ namespace KachingPlugIn.Factories
                     continue;
                 }
 
-                var marketKey = market.MarketId.Value.KachingCompatibleKey();
+                var marketKey = market.MarketId.Value.SanitizeKey();
                 prices[marketKey] = priceValue.UnitPrice.Amount;
             }
 
