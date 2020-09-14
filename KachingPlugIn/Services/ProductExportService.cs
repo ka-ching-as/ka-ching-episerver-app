@@ -113,7 +113,7 @@ namespace KachingPlugIn.Services
             categories.Add(category);
             // TODO - getting product ids here is enough.
             var products = BuildKachingProducts(categories, tags);
-            var ids = products.Select(p => p.Id);
+            var ids = products.Select(p => p.Id.SanitizeKey());
             APIFacade.Delete(ids.ToList(), url);
         }
 

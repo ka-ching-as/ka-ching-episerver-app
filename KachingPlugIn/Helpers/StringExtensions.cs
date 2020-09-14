@@ -16,7 +16,6 @@ namespace KachingPlugIn.Helpers
             }
 
             var sb = new StringBuilder(key);
-            sb.Replace("_", "%5F");
             sb.Replace(".", "%2E");
             sb.Replace("$", "%24");
             sb.Replace("#", "%23");
@@ -36,7 +35,6 @@ namespace KachingPlugIn.Helpers
             }
 
             var sb = new StringBuilder(key);
-            sb.Replace("%5F", "_");
             sb.Replace("%2E", ".");
             sb.Replace("%24", "$");
             sb.Replace("%23", "#");
