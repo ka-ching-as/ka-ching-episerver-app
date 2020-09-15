@@ -7,7 +7,16 @@
     <authors>Ka-ching A/S</authors>
     <owners>Ka-ching A/S</owners>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
-    <description>Builds Kaching Plug In Add On</description>
+    <description>
+      This Episerver add-on aims at making it easy to use the awesome capabilities and information in Episerver Commerce as a sales tool in retail stores by integrating with Ka-ching.
+
+      When the add-on is installed it listens for commerce data change events and if configured with import URLs it will send the updated data to Ka-ching.
+
+      Configuration is done in Web.config after installation. Take a look at the README.md at https://github.com/ka-ching-as/ka-ching-episerver-app for more information.
+
+      Learn more about Ka-ching on Episerver Marketplace https://marketplace.episerver.com/apps/ka-ching-pos/ka-ching-pos/ or on https://ka.ching.dk
+    </description>
+    <projectUrl>https://github.com/ka-ching-as/ka-ching-episerver-app</projectUrl>
     <copyright>Copyright © 2019</copyright>
     <tags>EPiServerModulePackage</tags>
     <iconUrl>https://scontent.fcph3-1.fna.fbcdn.net/v/t1.0-9/65599938_1146500505551266_6640881710135246848_o.png?_nc_cat=111&amp;_nc_oc=AQnNCWIVBqMsAdgQnG00OWdJj89ScFAOwtWdkXvrG-_mvHHk3mTIzwRai_M_dWljnEo&amp;_nc_ht=scontent.fcph3-1.fna&amp;oh=b20b2197e1c77ce7114e977dba0fa0b3&amp;oe=5DFBEAF3</iconUrl>
