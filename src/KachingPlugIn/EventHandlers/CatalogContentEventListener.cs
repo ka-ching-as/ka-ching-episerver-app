@@ -149,9 +149,46 @@ namespace KachingPlugIn.EventHandlers
             Logger.Debug("EntryDeleted raised.");
 
             IEnumerable<ContentReference> contentLinks = GetContentLinks(e);
-            IEnumerable<ContentReference> affectedProductLinks = GetAffectedProductReferences(contentLinks);
 
-            ProductContent[] products = _contentLoader.GetItems(affectedProductLinks, CultureInfo.InvariantCulture)
+
+            // Variants
+            IEnumerable<ContentReference> variantLinks = GetVariantReferences(contentLinks);
+            VariationContent[] variants = _contentLoader.GetItems(variantLinks, CultureInfo.InvariantCulture)
+                .OfType<VariationContent>()
+                .ToArray();
+
+            foreach (VariationContent variant in variants)
+            {
+                foreach (var parent in variant.GetParentProducts())
+                {
+                    var product = _contentLoader.Get<ProductContent>(parent);
+
+                    IEnumerable<ContentReference> variantRefs = _relationRepository
+                        .GetChildren<ProductVariation>(product.ContentLink)
+                        .Select(r => r.Child);
+                    ICollection<VariationContent> productVariants = _contentLoader
+                        .GetItems(variantRefs, LanguageSelector.MasterLanguage())
+                        .OfType<VariationContent>()
+                        .ToArray();
+
+                    var configuration = KachingConfiguration.Instance;
+                    if (productVariants.Count == 1 && configuration.ExportSingleVariantAsProduct)
+                    {
+                        _productExportService.DeleteSingleVariantProduct(variant);
+                    }
+                    else
+                    {
+                        // Since variants are not independent datatypes in Ka-ching 
+                        // a variant change is always a product update and not a delete
+                        _productExportService.ExportProduct(product, variant.Code);
+                    }
+                }
+            }
+
+            // Products
+            IEnumerable<ContentReference> productLinks = GetProductReferences(contentLinks);
+
+            ProductContent[] products = _contentLoader.GetItems(productLinks, CultureInfo.InvariantCulture)
                 .OfType<ProductContent>()
                 .ToArray();
 
@@ -261,6 +298,42 @@ namespace KachingPlugIn.EventHandlers
                         nodeId,
                         CatalogContentType.CatalogNode,
                         0));
+            }
+
+            return uniqueLinks;
+        }
+
+        private IEnumerable<ContentReference> GetProductReferences(
+            IEnumerable<ContentReference> contentLinks)
+        {
+            var uniqueLinks = new HashSet<ContentReference>();
+
+            foreach (IContent content in _contentLoader.GetItems(contentLinks, CultureInfo.InvariantCulture))
+            {
+                switch (content)
+                {
+                    case ProductContent productContent:
+                        uniqueLinks.Add(productContent.ContentLink);
+                        break;
+                }
+            }
+
+            return uniqueLinks;
+        }
+
+        private IEnumerable<ContentReference> GetVariantReferences(
+            IEnumerable<ContentReference> contentLinks)
+        {
+            var uniqueLinks = new HashSet<ContentReference>();
+
+            foreach (IContent content in _contentLoader.GetItems(contentLinks, CultureInfo.InvariantCulture))
+            {
+                switch (content)
+                {
+                    case VariationContent variationContent:
+                        uniqueLinks.Add(variationContent.ContentLink);
+                        break;
+                }
             }
 
             return uniqueLinks;

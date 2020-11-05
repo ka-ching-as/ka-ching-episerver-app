@@ -8,6 +8,8 @@
     <owners>Ka-ching A/S</owners>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <description>
+      This is part of Ka-ching's Episerver Add-On. This package can be installed in the commerce manager site to handle change events arising from there.
+
       This Episerver add-on aims at making it easy to use the awesome capabilities and information in Episerver Commerce as a sales tool in retail stores by integrating with Ka-ching.
 
       When the add-on is installed it listens for commerce data change events and if configured with import URLs it will send the updated data to Ka-ching.

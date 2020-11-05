@@ -92,9 +92,15 @@ namespace KachingPlugIn.Services
                 _configuration.ProductsImportUrl);
         }
 
-        public void DeleteSingleVariantProduct(VariationContent variant, string url)
+        public void DeleteSingleVariantProduct(VariationContent variant)
         {
             _log.Information("DeleteSingleVariantProduct: " + variant.Code);
+
+            if (!_configuration.ProductsImportUrl.IsValidProductsImportUrl())
+            {
+                _log.Information("Skipped single variant product delete because url is not valid: " + _configuration.ProductsImportUrl);
+                return;
+            }
 
             // Bail if not published
             var isPublished = _contentVersionRepository.ListPublished(variant.ContentLink).Count() > 0;
@@ -105,9 +111,8 @@ namespace KachingPlugIn.Services
             }
 
             var ids = new List<string>();
-            ids.Add(variant.Code.KachingCompatibleKey());
-            var statusCode = APIFacade.Delete(ids, url);
-            _log.Information("Status code: " + statusCode.ToString());
+            ids.Add(variant.Code.SanitizeKey());
+            APIFacade.Delete(ids, _configuration.ProductsImportUrl);
         }
 
         public void DeleteChildProducts(NodeContent category)
