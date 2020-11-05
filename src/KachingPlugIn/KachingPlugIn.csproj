@@ -261,6 +261,6 @@
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="$(SolutionDir)\.nuget\NuGet.targets" />
   <PropertyGroup>
-    <PostBuildEvent>$(SolutionDir).nuget\NuGet.exe pack $(ProjectDir)KachingPlugIn.nuspec -OutputDirectory $(ProjectDir)..\..\..\..\..\nugets -IncludeReferencedProjects -Properties Configuration=$(Configuration)</PostBuildEvent>
+    <PostBuildEvent>$(SolutionDir).nuget\NuGet.exe pack $(SolutionDir)KachingPlugIn.nuspec -OutputDirectory $(ProjectDir)..\..\..\nugets -IncludeReferencedProjects -Properties Configuration=$(Configuration)</PostBuildEvent>
   </PropertyGroup>
 </Project>
