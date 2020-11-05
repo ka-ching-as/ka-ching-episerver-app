@@ -8,32 +8,37 @@
  
 ## Concept
 
-This Episerver add-on aims at making it easy to use the awesome capabilities and information in Episerver Commerce as a sales tool in retail stores by integrating with Ka-ching.
+This Episerver Add-On aims at making it easy to use the awesome capabilities and information in Episerver Commerce as a sales tool in retail stores by integrating with Ka-ching.
 
-When the add-on is installed it listens for commerce data change events and if configured with import URLs it will send the updated data to Ka-ching. Version 3 of the Add-On also makes it easy to send sales data to Episerver from Ka-ching as well as enabling customer lookup in Ka-ching with minimal effort. See below for details of what data and what events are handled. 
+When the Add-On is installed it listens for commerce data change events and if configured with import URLs it will send the updated data to Ka-ching. Version 3 of the Add-On also makes it easy to send checkout data to Episerver from Ka-ching as well as enabling customer search from Ka-ching POS with minimal effort. See below for details of what data and what events are handled. 
 
-Configuration of the add-on is done post-install in a Ka-ching related section in web.config. See below for more details. To perform initial exports to Ka-ching go the CMS admin page and find "Ka-ching Integration" in the Tools section. 
+Configuration of the Add-On is done post-install in a Ka-ching section in Web.config. See below for more details. After configuration in Web.config then to perform initial exports to Ka-ching, go the CMS admin page and find "Ka-ching Integration" in the Tools section. 
 
 The current implementation is developed and tested using the Episerver reference commerce site [Foundation](https://github.com/episerver/Foundation).
 
-All development on this add-on is open source under the MIT license. Contributions are very welcome.
+All development on this Add-On is open source under the MIT license. Contributions are very welcome.
 
 You need a Ka-ching account to use this Add-On. If you don't have one then [contact us](https://ka-ching.dk/about-us/) to learn more.
 
 If you have a Ka-ching account you can download the [Ka-ching POS app](https://apps.apple.com/us/app/ka-ching-pos-point-of-sale/id1474762454) and get started utilizing Episerver in your stores right away.
 
-## Configuring the add-on
+## Configuring the Add-On
 
 This section assumes you have a Ka-ching account. Get in touch using the contact details found [here](https://ka-ching.dk/about-us/) if you need an account.
 
 ### Episerver
 
-The Ka-ching Add-On for Episerver consists of 2 NuGet packages. 1 for CMS and 1 for Commerce. You can find them on the [Episerver NuGet feed](https://nuget.episerver.com/?q=kaching&s=Popular&r=10&f=All). Currently the Ka-ching Add-On works with Episerver.CMS version 11 and Episerver.Commcerce version 13.
+The Ka-ching Add-On for Episerver consists of 2 NuGet packages:
+
+* KachingPlugIn - which can be installed independently on Commerce Manager instances if necessary.
+* KachingPlugIn.Web - which should be installed on the front end. This package has a dependency to KachingPlugIn.
+ 
+You can find them on the [Episerver NuGet feed](https://nuget.episerver.com/?q=kaching&s=Popular&r=10&f=All). Currently the Ka-ching Add-On works with Episerver.CMS version 11 and Episerver.Commcerce version 13.
 
 #### Data synchronization from Episerver to Ka-ching
 
 TODO
-After installing the NuGet packages in the relevant Episerver projects you should see a `kaching` section of the web.config in the CMS project:
+After installing the NuGet packages in the relevant Episerver projects you should see a `kaching` section of the Web.config in the front end project:
 
 ```xml
 <kaching productsImportUrl=""
@@ -51,24 +56,24 @@ After installing the NuGet packages in the relevant Episerver projects you shoul
 </kaching>
 ```
 
-In this section you need to specify URL endpoints for each data entity you wish to synchronize to Ka-ching. See more on how to obtain those below.
+In this section you need to specify URL endpoints for each data entity you wish to synchronize to Ka-ching. See more on how to obtain those below. Convert any ampersand characters `&` into `&amp;` to avoid errors.
 
 Ka-ching supports products without variants and if you have products with just 1 variant you can force those to be just products in Ka-ching by setting `exportSingleVariantAsProduct` to `true`. This makes it possible to tap the product in Ka-ching to put it in the basket as opposed to opening the product details page where you have to choose the variant.
 
-To receive events from commerce data changes happing in the Commerce Manager set `listenToRemoteEvents` to `true` - if you're running more than 1 front end in load balanced setup take care that only one of these instances have this enabled since the Commerce Manager will send push notifications to all front ends.
+To receive events from commerce data changes happing in other instances set `listenToRemoteEvents` to `true` - if you're running more than 1 front end in load balanced setup, take care that only one of these instances have this enabled since the Commerce Manager will send push notifications to all front ends.
 
-For all products and variants you can use the `barcodeMetaField` and `descriptionMetaField` attributes of the `systemMappings` mappings element to tell the Ka-ching Add-On where to look for those pieces of information and place them correctly in data sent to Ka-ching. If for example you store the barcode information that should be used for scanning in the stores in a field called `EAN` on the products and variants, then you specify `barcodeMetaField="EAN"`. Those two fields should be normal strings, but we do however try to convert XhtmlString to a string by stripping tags.
+For all products and variants you can use the `barcodeMetaField` and `descriptionMetaField` attributes of the `systemMappings` mappings element to tell the Ka-ching Add-On where to look for those pieces of information and place them correctly in data sent to Ka-ching. If for example you store the barcode string that should be used when scanning barcodes in the stores in a field called `EAN` on the products and variants, then you specify `barcodeMetaField="EAN"`. Those two fields should be normal strings, but we do however try to convert XhtmlString to a string by stripping tags.
 
-If you have custom attributes on your products and variants you can map those to their Ka-ching using the `attributeMappings` element. The `metaField` is the name of the property on your product or variant and `attributeId` is the id of the matching attribute define in Ka-ching. You'll have to define those manually in Ka-ching Backoffice.
+If you have custom attributes on your products and variants you can map those to their Ka-ching counterparts using the `attributeMappings` element. The `metaField` is the name of the property on your product or variant and `attributeId` is the id of the matching attribute define in Ka-ching. You'll have to define those manually in Ka-ching Backoffice.
 
 #### Endpoints in Episerver
 
-The Ka-ching Add-On sets up two endpoints for communicting with Ka-ching:
+The Add-On sets up two endpoints for communicting with Ka-ching:
 
 * Customer search based on a search string from Ka-ching 
 * Real time reception of data from checkouts done in the physical stores
 
-To enable these endpoints you have to enable KachingApiKeyAuthentication which is done by activating in on the app builder in Startup.cs. You can use any string as API key. It is passed in the Authorization header in the HTTP calls from Ka-ching. See below for more on how to configure the Authorization header on the Ka-ching side.
+To enable these endpoints you have to enable KachingApiKeyAuthentication which is done by activating in on the app builder in Startup.cs in the front end. You can use any string as API key. It is passed in the Authorization header in the HTTP calls from Ka-ching. See below for more on how to configure the Authorization header on the Ka-ching side.
 
 ```
 app.UseKachingApiKeyAuthentication(
@@ -80,11 +85,11 @@ app.UseKachingApiKeyAuthentication(
 
 ### Ka-ching
 
-Go to [Ka-ching Backoffice](https://backoffice.ka-ching.dk/login) to setup the import integrations needed for this add-on to work.
+Go to [Ka-ching Backoffice](https://backoffice.ka-ching.dk/login) to configure the integrations needed for this Add-On to work.
 
 After logging in, click the user icon in the top bar and click the "Advanced" option to show the "Advanced" menu in the left of the screen.
 
-Click the "Import integrations" option. The Add-on supports synchronization to Ka-ching using the following integration points:
+Click the "Import integrations" option. The Add-On supports synchronization to Ka-ching using the following integration points:
 
 * Products import
 * Product assets import
@@ -92,9 +97,9 @@ Click the "Import integrations" option. The Add-on supports synchronization to K
 * Tags import
 * Folders import
 
-Copy and paste each of the URLs for those endpoints to their appropriate fields in the web.config configuration in Episerver. Once those URLs are saved it will be possible to do an initial full export of products, categories, document/image assets and product relations from Episerver to Ka-ching from the `Ka-ching integration` page in CMS admin.
+Copy and paste each of the URLs for those endpoints to their appropriate fields in the Web.config configuration in Episerver. Once those URLs are saved it will be possible to do an initial full export of product information and categories from Episerver to Ka-ching from the `Ka-ching Integration` page in CMS admin.
 
-To enable customer search in Episervers customer database from Ka-ching go to the "Runtime integrations" menu option. Click "Add integration" and choose "Add customer lookup integration". Give it a name, an id and enter the URL of the endpoint in Episerver. HTTP method should be GET. The URL will have the form `https://<episerver-host>/api/kaching/customerlookup`. Click "Add HTTP header" and specify `Authorization` as header name with `KachingKey <episerver-api-key>` where `<episerver-api-key>` is the API key mention above. Click "Add query parameter" and specify `q` as the name with `{search_term}` as the value.
+If you want to search for customers in Episerver from Ka-ching go to the "Runtime integrations" menu option. Click "Add integration" and choose "Add customer lookup integration". Give it a name, an id and enter the URL of the endpoint in Episerver. HTTP method should be GET. The URL will have the form `https://<episerver-host>/api/kaching/customerlookup`. Click "Add HTTP header" and specify `Authorization` as header name with `KachingKey <episerver-api-key>` where `<episerver-api-key>` is the API key mention above. Click "Add query parameter" and specify `q` as the name with `{search_term}` as the value.
 
 To enable real time checkout data from Ka-ching go to the "Export integrations" menu option. The setup is similar very to the setup for the customer lookup integration. Click "Add web hook" and choose "Add sale integration". Give it a name, an id and enter the URL of the endpoint in Episerver. The URL wil have the form `https://<episerver-host>/api/kaching/sales`. Click "Add HTTP header" and specify `Authorization` as header name with `KachingKey <episerver-api-key>` where `<episerver-api-key>` is the API key mention above.
 
@@ -113,16 +118,14 @@ More info on how to use the Ka-ching Backoffice can be found on our [Zendesk sit
 * Create and configure shops. Select appropriate market for each of the shops.
 * Create cashiers for each shop.
 * Create and invite the appropriate users needed. Ususally a shop manager for each shop is enough.
-* If you use custom product attributes you'll have to define them manually with ids matching the `attributeId` specified in the web.config configuration in Episerver.
+* If you use custom product attributes you'll have to define them manually with ids matching the `attributeId` specified in the Web.config configuration in Episerver.
 * If you use related products or recommendations as they're called in Ka-ching then you have to configure recommendation categories manually where the ids match the association group ids in Episerver.
-
-That should do it.
 
 ## Data from Episerver to Ka-ching
 
 ### Products
 
- * Product code
+ * Product code.
  * Display name for all defined languages.
  * Default prices for all markets.
  * First image present if any.
@@ -132,7 +135,7 @@ That should do it.
 
 ### Variations
 
- * Variant code
+ * Variant code.
  * Display name for all defined languages.
  * Default prices for all markets.
  * First image present if any.
@@ -145,7 +148,7 @@ That should do it.
 
 ### Product associations
 
-* Associated product codes for each product
+* Associated product codes for each product.
 
 ### Product assets
 
@@ -221,7 +224,7 @@ For normal sales the Add-On creates orders in Episerver where the order shipment
 
 ### Ecommerce order from store
 
-If the feature is enabled, Ka-ching makes possible for the store associates to sell items from the webshop with the expectation that the webshop will handle fulfillment of that order. It's useful if the store doesn't carry the full product catalogue or they are temporarily sold out of a particular item that the customer wants.
+If the feature is enabled in Ka-ching, it's possible for the store associates to sell items from the webshop with the expectation that the webshop will handle fulfillment of the order. It's useful if the store doesn't carry the full product catalogue or they are temporarily sold out of a particular item that the customer wants.
 
 This kind of sale in Ka-ching will have a special line item that represents the shipping information, like delivery address, id of shipping method and costs. If such a line is present the Add-On will create a separate shipment with status `AwaitingInventory` and the order itself will be marked as `InProgress`.
 
@@ -273,11 +276,16 @@ If there's no `debugLogAppender` appender defined then paste this element inside
 - Go to the bottom of the file Main.targets in the Packager folder and change the value of `DestinationFolder` in this tag `<Copy  SourceFiles="@(_CopyItems)" DestinationFolder="C:\Users\User\nugets" />`to match the path of your local nuget folder.
 - Ctrl-Shift-B to build solution. The package dependencies should be downloaded automatically based on the packages.config file.
 
-### Running
+### Running with Foundation
 
-- Open your favorite Episerver Commerce project.
-- Make sure you have a NuGet feed that's looking in the folder specified above.
-- In the Package Manager Console run the command `install-package KachingPlugIn`.
+- Clone the Foundation [repo](https://github.com/episerver/Foundation).
+- Switch to the `develop` branch (as of 20th of July 2020) . We never managed to start up Foundation from the `master` branch.
+- Change the setup.cmd file:
+  - Add "" around %SQLSERVER% in linie 152
+- We had to use `(LocalDB)\.` when specifying the local database server.
+- Either download the Ka-ching packages from the [Episerver Nuget feed](https://nuget.episerver.com/?q=kaching&s=Popular&r=10&f=All) or install them from locally built packages.
+- In the Package Manager Console run the command `install-package KachingPlugIn.Web`.
+- Go through the necessary configurations as described above.
 - Build solution.
 - Refresh your browser or debug solution if IIS Express is not already running.
 
@@ -287,9 +295,15 @@ If there's no `debugLogAppender` appender defined then paste this element inside
 
 ## Ideas for future versions
 
+- Configuration of custom product properties to use for dimensions and values in Ka-ching.
 - Handling of tax data per product.
 - Bundles and packages.
 - Synchronization of stock values to Ka-ching.
 - Synchronization of campaigns.
 - Synchronization of markets and default taxes.
+- Synchronization of shipping methods.
 - Better marking and handling of click & collect orders.
+- Unit tests.
+- Handling of data from return checkouts from Ka-ching.
+- Sending a customer's basket from Ka-ching to Episerver.
+- Customer sign up in Ka-ching POS.
