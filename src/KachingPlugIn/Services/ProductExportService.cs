@@ -13,6 +13,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Net;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace KachingPlugIn.Services
@@ -83,13 +84,22 @@ namespace KachingPlugIn.Services
             });
         }
 
-        public void DeleteProducts(IEnumerable<EntryContentBase> catalogEntries)
+        public void DeleteProducts(ICollection<EntryContentBase> catalogEntries)
         {
+            if (catalogEntries == null ||
+                catalogEntries.Count == 0)
+            {
+                return;
+            }
+
             IEnumerable<string> catalogCodes = catalogEntries.Select(c => c.Code.SanitizeKey());
 
-            APIFacade.Delete(
-                catalogCodes,
-                _configuration.ProductsImportUrl);
+            // Call the external endpoint asynchronously and return immediately.
+            Task.Factory.StartNew(() =>
+                APIFacade.DeleteAsync(
+                        catalogCodes,
+                        _configuration.ProductsImportUrl)
+                    .ConfigureAwait(false));
         }
 
         public void DeleteSingleVariantProduct(VariationContent variant)
@@ -98,7 +108,8 @@ namespace KachingPlugIn.Services
 
             if (!_configuration.ProductsImportUrl.IsValidProductsImportUrl())
             {
-                _log.Information("Skipped single variant product delete because url is not valid: " + _configuration.ProductsImportUrl);
+                _log.Information("Skipped single variant product delete because url is not valid: " +
+                                 _configuration.ProductsImportUrl);
                 return;
             }
 
@@ -112,7 +123,13 @@ namespace KachingPlugIn.Services
 
             var ids = new List<string>();
             ids.Add(variant.Code.SanitizeKey());
-            APIFacade.Delete(ids, _configuration.ProductsImportUrl);
+
+            // Call the external endpoint asynchronously and return immediately.
+            Task.Factory.StartNew(() =>
+                APIFacade.DeleteAsync(
+                        ids,
+                        _configuration.ProductsImportUrl)
+                    .ConfigureAwait(false));
         }
 
         public void DeleteChildProducts(NodeContent category)
@@ -125,23 +142,18 @@ namespace KachingPlugIn.Services
             // TODO - getting product ids here is enough.
             var products = BuildKachingProducts(categories, tags);
             var ids = products.Select(p => p.Id.SanitizeKey()).ToArray();
-            APIFacade.Delete(ids, _configuration.ProductsImportUrl);
+
+            // Call the external endpoint asynchronously and return immediately.
+            Task.Factory.StartNew(() =>
+                APIFacade.DeleteAsync(
+                        ids,
+                        _configuration.ProductsImportUrl)
+                    .ConfigureAwait(false));
         }
 
         public void DeleteProductAssets(ICollection<EntryContentBase> entries)
         {
-            if (entries == null)
-            {
-                return;
-            }
-
-            DeleteProductAssets(
-                entries.Select(e => e.Code.SanitizeKey()));
-        }
-
-        public void DeleteProductAssets(IEnumerable<string> entryCodes)
-        {
-            if (entryCodes == null)
+            if (entries == null || entries.Count == 0)
             {
                 return;
             }
@@ -151,10 +163,17 @@ namespace KachingPlugIn.Services
                 return;
             }
 
-            APIFacade.Delete(entryCodes, _configuration.ProductAssetsImportUrl);
+            // Call the external endpoint asynchronously and return immediately.
+            Task.Factory.StartNew(() =>
+                APIFacade.DeleteAsync(
+                        entries
+                            .OfType<ProductContent>()
+                            .Select(e => e.Code.SanitizeKey()),
+                        _configuration.ProductsImportUrl)
+                    .ConfigureAwait(false));
         }
 
-        public void ExportProductAssets(ICollection<EntryContentBase> entries)
+        public void ExportProductAssets(ICollection<ProductContent> entries)
         {
             if (entries == null ||
                 entries.Count == 0)
@@ -167,7 +186,8 @@ namespace KachingPlugIn.Services
                 return;
             }
 
-            foreach (var batch in entries.Batch(BatchSize))
+            foreach (var batch in entries
+                .Batch(BatchSize))
             {
                 var assets = new Dictionary<string, ICollection<ProductAsset>>(BatchSize);
                 foreach (var entry in batch)
@@ -184,7 +204,7 @@ namespace KachingPlugIn.Services
 
         public void DeleteProductRecommendations(ICollection<EntryContentBase> entries)
         {
-            if (entries == null)
+            if (entries == null || entries.Count == 0)
             {
                 return;
             }
@@ -201,11 +221,16 @@ namespace KachingPlugIn.Services
             {
                 // Do the deletion in batches.
                 foreach (var batch in entries
+                    .OfType<ProductContent>()
                     .Batch(BatchSize))
                 {
-                    APIFacade.Delete(
-                        batch.Select(s => s.Code.SanitizeKey()),
-                        _configuration.ProductRecommendationsImportUrl + "&recommendation_id=" + associationGroup.Name.SanitizeKey());
+                    // Call the external endpoint asynchronously and return immediately.
+                    Task.Factory.StartNew(() =>
+                        APIFacade.DeleteAsync(
+                                batch.Select(s => s.Code.SanitizeKey()),
+                                _configuration.ProductRecommendationsImportUrl + "&recommendation_id=" +
+                                associationGroup.Name.SanitizeKey())
+                            .ConfigureAwait(false));
                 }
             }
         }
@@ -275,20 +300,38 @@ namespace KachingPlugIn.Services
                 return;
             }
 
-            var allAssociations = new List<Association>();
-            var entryLinksToDelete = new HashSet<ContentReference>(ContentReferenceComparer.IgnoreVersion);
+            IEnumerable<EntryContentBase> entries = _contentLoader
+                .GetItems(entryLinks, CultureInfo.InvariantCulture)
+                .OfType<EntryContentBase>();
 
-            foreach (ContentReference entryLink in entryLinks
-                .Distinct(ContentReferenceComparer.IgnoreVersion))
+            ExportProductRecommendations(entries, exportState);
+        }
+
+        public void ExportProductRecommendations(IEnumerable<EntryContentBase> entries, IExportState exportState)
+        {
+            if (!_configuration.ProductRecommendationsImportUrl.IsValidProductRecommendationsImportUrl())
             {
-                var associations = (ICollection<Association>)_associationRepository.GetAssociations(entryLink);
+                return;
+            }
+
+            var allAssociations = new HashSet<Association>();
+            var entriesToDelete = new HashSet<EntryContentBase>(ContentComparer.Default);
+
+            foreach (EntryContentBase entry in entries
+                .Distinct(ContentComparer.Default)
+                .OfType<EntryContentBase>())
+            {
+                var associations = (ICollection<Association>)_associationRepository.GetAssociations(entry.ContentLink);
                 if (associations.Count == 0)
                 {
-                    entryLinksToDelete.Add(entryLink);
+                    entriesToDelete.Add(entry);
                 }
                 else
                 {
-                    allAssociations.AddRange(associations);
+                    foreach (Association association in associations)
+                    {
+                        allAssociations.Add(association);
+                    }
                 }
             }
 
@@ -322,7 +365,7 @@ namespace KachingPlugIn.Services
                 }
             }
 
-            if (entryLinksToDelete.Count == 0)
+            if (entriesToDelete.Count == 0)
             {
                 return;
             }
@@ -333,19 +376,20 @@ namespace KachingPlugIn.Services
                 {
                     exportState.Action = "Deleted";
                     exportState.ModelName = $"product associations ({associationGroup.Name})";
-                    exportState.Total = entryLinksToDelete.Count;
+                    exportState.Total = entriesToDelete.Count;
                     exportState.Uploaded = 0;
                 }
 
-                foreach (var batch in _contentLoader
-                    .GetItems(entryLinksToDelete, CultureInfo.InvariantCulture)
-                    .OfType<EntryContentBase>()
+                foreach (var batch in entriesToDelete
                     .Select(c => c.Code.SanitizeKey())
                     .Batch(BatchSize))
                 {
-                    APIFacade.DeleteObject(
-                        batch,
-                        _configuration.ProductRecommendationsImportUrl + "&recommendation_id=" + associationGroup.Name.SanitizeKey());
+                    // Call the external endpoint asynchronously and return immediately.
+                    Task.Factory.StartNew(() =>
+                        APIFacade.DeleteObjectAsync(
+                                batch,
+                                _configuration.ProductRecommendationsImportUrl + "&recommendation_id=" + associationGroup.Name.SanitizeKey())
+                            .ConfigureAwait(false));
 
                     if (exportState != null)
                     {
@@ -414,7 +458,7 @@ namespace KachingPlugIn.Services
             foreach (var batch in assets.Batch(BatchSize))
             {
                 APIFacade.Post(
-                    new { assets = batch },
+                    new {assets = batch},
                     _configuration.ProductAssetsImportUrl);
 
                 ExportState.Uploaded += batch.Count;
@@ -426,7 +470,13 @@ namespace KachingPlugIn.Services
 
             foreach (var batch in entriesWithoutAssets.Batch(BatchSize))
             {
-                APIFacade.Delete(batch, _configuration.ProductAssetsImportUrl);
+                // Call the external endpoint asynchronously and return immediately.
+                Task.Factory.StartNew(() =>
+                    APIFacade.DeleteAsync(
+                            batch,
+                            _configuration.ProductAssetsImportUrl)
+                        .ConfigureAwait(false));
+
 
                 ExportState.Uploaded += batch.Count;
             }

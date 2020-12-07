@@ -11,6 +11,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
+using KachingPlugIn.Configuration;
 
 namespace KachingPlugIn.Services
 {
@@ -28,6 +29,7 @@ namespace KachingPlugIn.Services
             }
         }
 
+        private readonly KachingConfiguration _configuration;
         private readonly ReferenceConverter _referenceConverter;
         private readonly IContentLoader _contentLoader;
         private readonly IContentVersionRepository _contentVersionRepository;
@@ -41,14 +43,21 @@ namespace KachingPlugIn.Services
             IContentVersionRepository contentVersionRepository,
             L10nStringFactory l10nStringFactory)
         {
+            _configuration = KachingConfiguration.Instance;
             _referenceConverter = referenceConverter;
             _contentLoader = contentLoader;
             _contentVersionRepository = contentVersionRepository;
             _l10nStringFactory = l10nStringFactory;
         }
 
-        public void StartFullCategoryExport(string tagsUrl, string foldersUrl)
+        public void StartFullCategoryExport()
         {
+            if (!_configuration.FoldersImportUrl.IsValidFoldersImportUrl() ||
+                !_configuration.TagsImportUrl.IsValidTagsImportUrl())
+            {
+                return;
+            }
+
             if (ExportState != null)
             {
                 if (ExportState.Busy)
@@ -62,7 +71,7 @@ namespace KachingPlugIn.Services
             {
                 try
                 {
-                    ExportCategoryStructure(tagsUrl, foldersUrl);
+                    ExportCategoryStructure(_configuration.TagsImportUrl, _configuration.FoldersImportUrl);
                 }
                 catch (WebException e)
                 {
@@ -76,6 +85,24 @@ namespace KachingPlugIn.Services
                     _log.Error("Export aborted with error: " + e.Message);
                 }
             });
+        }
+
+        public void DeleteTags(ICollection<NodeContent> catalogNodes)
+        {
+            if (catalogNodes == null ||
+                catalogNodes.Count == 0)
+            {
+                return;
+            }
+
+            IEnumerable<string> catalogCodes = catalogNodes.Select(c => c.Code.SanitizeKey());
+
+            // Call the external endpoint asynchronously and return immediately.
+            Task.Factory.StartNew(() =>
+                APIFacade.DeleteAsync(
+                        catalogCodes,
+                        _configuration.FoldersImportUrl)
+                    .ConfigureAwait(false));
         }
 
         private void ExportCategoryStructure(string tagsUrl, string foldersUrl)
