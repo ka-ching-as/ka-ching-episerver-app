@@ -39,7 +39,7 @@
     <Compile Include="EnumerableExtensions.cs" />
     <Compile Include="CommerceMediaComparer.cs" />
     <Compile Include="EventHandlers\CatalogContentEvents.cs" />
-    <Compile Include="EventInitialization.cs" />
+    <Compile Include="KachingInitialization.cs" />
     <Compile Include="Factories\L10nStringFactory.cs" />
     <Compile Include="Factories\ProductFactory.cs" />
     <Compile Include="Helpers\APIFacade.cs" />

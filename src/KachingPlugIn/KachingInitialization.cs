@@ -10,7 +10,7 @@ namespace KachingPlugIn
 {
     [InitializableModule]
     [ModuleDependency(typeof(EPiServer.Web.InitializationModule))]
-    public class EventInitialization : IInitializableModule
+    public class KachingInitialization : IInitializableModule
     {
         public void Initialize(InitializationEngine context)
         {
