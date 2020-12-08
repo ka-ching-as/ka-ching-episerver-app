@@ -13,7 +13,6 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Net;
-using System.Threading;
 using System.Threading.Tasks;
 
 namespace KachingPlugIn.Services
@@ -169,7 +168,7 @@ namespace KachingPlugIn.Services
                         entries
                             .OfType<ProductContent>()
                             .Select(e => e.Code.SanitizeKey()),
-                        _configuration.ProductsImportUrl)
+                        _configuration.ProductAssetsImportUrl)
                     .ConfigureAwait(false));
         }
 
