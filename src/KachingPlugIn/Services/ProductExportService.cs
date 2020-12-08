@@ -191,6 +191,11 @@ namespace KachingPlugIn.Services
                 var assets = new Dictionary<string, ICollection<ProductAsset>>(BatchSize);
                 foreach (var entry in batch)
                 {
+                    if (entry.CommerceMediaCollection?.Count == 0)
+                    {
+                        continue;
+                    }
+
                     assets.Add(
                         entry.Code.SanitizeKey(),
                         _productFactory.BuildKaChingProductAssets(entry).ToArray());
