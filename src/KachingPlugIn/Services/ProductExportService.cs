@@ -25,8 +25,8 @@ namespace KachingPlugIn.Services
         private readonly ReferenceConverter _referenceConverter;
         private readonly KachingConfiguration _configuration;
         private readonly IContentLoader _contentLoader;
-        private readonly IContentVersionRepository _contentVersionRepository;
         private readonly ProductFactory _productFactory;
+        private readonly IPublishedStateAssessor _publishedStateAssessor;
         private readonly ILogger _log = LogManager.GetLogger(typeof(ProductExportService));
 
         public IExportState ExportState { get; set; }
@@ -36,16 +36,16 @@ namespace KachingPlugIn.Services
             GroupDefinitionRepository<AssociationGroupDefinition> associationGroupRepository,
             ReferenceConverter referenceConverter,
             IContentLoader contentLoader,
-            IContentVersionRepository contentVersionRepository,
-            ProductFactory productFactory)
+            ProductFactory productFactory,
+            IPublishedStateAssessor publishedStateAssessor)
         {
             _associationRepository = associationRepository;
             _associationGroupRepository = associationGroupRepository;
             _referenceConverter = referenceConverter;
             _configuration = KachingConfiguration.Instance;
             _contentLoader = contentLoader;
-            _contentVersionRepository = contentVersionRepository;
             _productFactory = productFactory;
+            _publishedStateAssessor = publishedStateAssessor;
         }
 
         public void StartFullProductExport(string url)
@@ -113,8 +113,7 @@ namespace KachingPlugIn.Services
             }
 
             // Bail if not published
-            var isPublished = _contentVersionRepository.ListPublished(variant.ContentLink).Count() > 0;
-            if (!isPublished)
+            if (!_publishedStateAssessor.IsPublished(variant))
             {
                 _log.Information("Skipped single variant product delete because it's not yet published");
                 return;
@@ -245,8 +244,7 @@ namespace KachingPlugIn.Services
             _log.Information("ExportProduct: " + product.Code);
 
             // Bail if not published
-            var isPublished = _contentVersionRepository.ListPublished(product.ContentLink).Count() > 0;
-            if (!isPublished)
+            if (!_publishedStateAssessor.IsPublished(product))
             {
                 _log.Information("Skipped product export because it's not yet published");
                 return;
@@ -509,8 +507,7 @@ namespace KachingPlugIn.Services
                     foreach (var product in products)
                     {
                         // continue if not published
-                        var isPublished = _contentVersionRepository.ListPublished(product.ContentLink).Count() > 0;
-                        if (!isPublished)
+                        if (!_publishedStateAssessor.IsPublished(product))
                         {
                             _log.Information("Skipped product because it's not yet published");
                             continue;
