@@ -78,7 +78,7 @@ namespace KachingPlugIn.EventHandlers
         {
             Logger.Debug("OnAssociationUpdated raised.");
 
-            IEnumerable<ProductContent> products = GetProductsAffected(e);
+            ICollection<ProductContent> products = GetProductsAffected(e);
 
             // HACK: Episerver does not clear the deleted associations from cache until after this event has completed.
             // In order to load the list of associations after deletions/updates, force delete the association list from cache.
@@ -100,10 +100,12 @@ namespace KachingPlugIn.EventHandlers
                 return;
             }
 
-            if (ContentReference.IsNullOrEmpty(e.ContentLink) ||
-                !_contentLoader.TryGet(e.ContentLink, CultureInfo.InvariantCulture, out CatalogContentBase catalogContentBase))
+            ContentReference newContentLink = e.ContentLink;
+            if (ContentReference.IsNullOrEmpty(newContentLink) ||
+                newContentLink.ProviderName != ReferenceConverter.CatalogProviderKey ||
+                !_contentLoader.TryGet(newContentLink, CultureInfo.InvariantCulture, out CatalogContentBase catalogContentBase))
             {
-                Logger.Debug("Published content is not a catalog entry.");
+                Logger.Debug("Copied content is not catalog content.");
                 return;
             }
 
@@ -156,10 +158,12 @@ namespace KachingPlugIn.EventHandlers
         {
             Logger.Debug("OnDeletingContent raised.");
 
-            if (ContentReference.IsNullOrEmpty(e.ContentLink) ||
-                !_contentLoader.TryGet(e.ContentLink, out CatalogContentBase catalogContentBase))
+            ContentReference deletingContentLink = e.ContentLink;
+            if (ContentReference.IsNullOrEmpty(deletingContentLink) ||
+                deletingContentLink.ProviderName != ReferenceConverter.CatalogProviderKey ||
+                !_contentLoader.TryGet(deletingContentLink, out CatalogContentBase catalogContentBase))
             {
-                Logger.Debug("Affected content is not a catalog entry.");
+                Logger.Debug("Deleted content is not catalog content.");
                 return;
             }
 
@@ -211,7 +215,7 @@ namespace KachingPlugIn.EventHandlers
 
             if (!(e.Content is CatalogContentBase catalogContentBase))
             {
-                Logger.Debug("Published content is not a catalog entry.");
+                Logger.Debug("Published content is not catalog content.");
                 return;
             }
 
@@ -229,20 +233,21 @@ namespace KachingPlugIn.EventHandlers
                     _productExportService.ExportProductRecommendations(products, null);
 
                     break;
-                case NodeContent _:
+                case NodeContent nodeContent:
                     _categoryExportService.StartFullCategoryExport();
+                    _productExportService.ExportChildProducts(nodeContent);
                     break;
             }
         }
 
         private void OnPriceUpdated(object sender, PriceUpdateEventArgs e)
         {
-            Logger.Debug("PriceUpdated raised.");
+            Logger.Debug("OnPriceUpdated raised.");
 
             var contentLinks = new HashSet<ContentReference>(
                 e.CatalogKeys.Select(key => _referenceConverter.GetContentLink(key.CatalogEntryCode)));
 
-            IEnumerable<ProductContent> products = GetProductsAffectedByPriceChanges(contentLinks);
+            IEnumerable<ProductContent> products = GetProductsAffected(contentLinks);
 
             foreach (ProductContent productContent in products)
             {
@@ -250,30 +255,12 @@ namespace KachingPlugIn.EventHandlers
             }
         }
 
-        private ICollection<NodeContent> GetNodesAffected(RelationEventArgs e)
-        {
-            ICollection<ContentReference> entryLinks = new HashSet<ContentReference>(ContentReferenceComparer.IgnoreVersion);
-
-            foreach (NodeRelationChange change in e.NodeRelationChanges)
-            {
-                entryLinks.Add(
-                    _referenceConverter.GetContentLink(change.ChildNodeId, CatalogContentType.CatalogNode, 0));
-            }
-
-            ICollection<NodeContent> entries = _contentLoader
-                .GetItems(entryLinks, CultureInfo.InvariantCulture)
-                .OfType<NodeContent>()
-                .ToArray();
-
-            return entries;
-        }
-
         private ICollection<EntryContentBase> GetEntriesAffected(
             EntryContentBase entryContent,
             bool includeParentProducts,
             bool includeChildVariants)
         {
-            var uniqueLinks = new HashSet<ContentReference>(ContentReferenceComparer.IgnoreVersion);
+            var uniqueLinks = new HashSet<ContentReference>(ContentReferenceComparer.Default);
 
             switch (entryContent)
             {
@@ -314,7 +301,7 @@ namespace KachingPlugIn.EventHandlers
 
         private ICollection<ProductContent> GetProductsAffected(AssociationEventArgs e)
         {
-            ICollection<ContentReference> entryLinks = new HashSet<ContentReference>(ContentReferenceComparer.IgnoreVersion);
+            ICollection<ContentReference> entryLinks = new HashSet<ContentReference>(ContentReferenceComparer.Default);
 
             foreach (AssociationChange change in e.Changes)
             {
@@ -330,89 +317,52 @@ namespace KachingPlugIn.EventHandlers
             return entries;
         }
 
-        private ICollection<ProductContent> GetProductsAffected(RelationEventArgs e)
+        private ICollection<ProductContent> GetProductsAffected(
+            IEnumerable<ContentReference> contentLinks)
         {
-            ICollection<ContentReference> entryLinks = new HashSet<ContentReference>(ContentReferenceComparer.IgnoreVersion);
+            IEnumerable<EntryContentBase> entryContents = _contentLoader
+                .GetItems(
+                    contentLinks.Distinct(ContentReferenceComparer.Default),
+                    CultureInfo.InvariantCulture)
+                .OfType<EntryContentBase>();
 
-            foreach (EntryRelationChange change in e.EntryRelationChanges)
-            {
-                entryLinks.Add(
-                    _referenceConverter.GetContentLink(change.ParentEntryId, CatalogContentType.CatalogEntry, 0));
-            }
-
-            foreach (NodeEntryRelationChange change in e.NodeEntryRelationChanges)
-            {
-                entryLinks.Add(
-                    _referenceConverter.GetContentLink(change.EntryId, CatalogContentType.CatalogEntry, 0));
-            }
-
-            ICollection<ProductContent> entries = _contentLoader
-                .GetItems(entryLinks, CultureInfo.InvariantCulture)
-                .OfType<ProductContent>()
-                .ToArray();
-
-            return entries;
+            return GetProductsAffected(entryContents);
         }
 
         private ICollection<ProductContent> GetProductsAffected(
             EntryContentBase entryContent)
         {
-            var uniqueProducts = new HashSet<ProductContent>(ContentComparer.Default);
-
-            switch (entryContent)
-            {
-                case VariationContent variationContent:
-                    IEnumerable<ContentReference> variantLinks = _relationRepository
-                        .GetParents<ProductVariation>(variationContent.ContentLink)
-                        .Select(pv => pv.Parent);
-
-                    // Look up all parent products for this variation.
-                    foreach (ProductContent parentProduct in _contentLoader
-                        .GetItems(variantLinks, CultureInfo.InvariantCulture)
-                        .OfType<ProductContent>())
-                    {
-                        uniqueProducts.Add(parentProduct);
-                    }
-
-                    break;
-                case ProductContent productContent:
-                    uniqueProducts.Add(productContent);
-                    break;
-            }
-
-            return uniqueProducts;
+            return GetProductsAffected(new[] {entryContent});
         }
 
-        private ICollection<ProductContent> GetProductsAffectedByPriceChanges(
-            IEnumerable<ContentReference> contentLinks)
+        private ICollection<ProductContent> GetProductsAffected(
+            IEnumerable<EntryContentBase> entryContents)
         {
-            ICollection<ContentReference> changedLinks = new HashSet<ContentReference>(
-                contentLinks,
-                ContentReferenceComparer.IgnoreVersion);
-            ICollection<ProductContent> products = new HashSet<ProductContent>(
-                ContentComparer.Default);
+            ICollection<ContentReference> productLinks = new HashSet<ContentReference>(ContentReferenceComparer.Default);
 
-            foreach (IContent content in _contentLoader.GetItems(changedLinks, CultureInfo.InvariantCulture))
+            foreach (EntryContentBase entryContent in entryContents)
             {
-                switch (content)
+                switch (entryContent)
                 {
                     case VariationContent variationContent:
-                        IEnumerable<ContentReference> parentProductLinks =
-                            variationContent.GetParentProducts(_relationRepository);
-
-                        foreach (var parentProduct in _contentLoader
-                            .GetItems(parentProductLinks, CultureInfo.InvariantCulture)
-                            .OfType<ProductContent>())
+                        IEnumerable<ProductVariation> parentProductLinks =
+                            _relationRepository.GetParents<ProductVariation>(variationContent.ContentLink);
+                        foreach (ProductVariation parentProductLink in parentProductLinks)
                         {
-                            products.Add(parentProduct);
+                            productLinks.Add(parentProductLink.Parent);
                         }
+
                         break;
                     case ProductContent productContent:
-                        products.Add(_contentLoader.Get<ProductContent>(productContent.ParentLink));
+                        productLinks.Add(productContent.ContentLink);
                         break;
-
                 }
             }
+
+            ICollection<ProductContent> products = _contentLoader
+                .GetItems(productLinks, CultureInfo.InvariantCulture)
+                .OfType<ProductContent>()
+                .ToArray();
 
             return products;
         }
