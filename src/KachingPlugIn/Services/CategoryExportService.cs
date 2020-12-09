@@ -114,14 +114,19 @@ namespace KachingPlugIn.Services
 
             var result = BuildTagsAndFolders(children);
 
-            ExportState.ModelName = "tags and folders";
-            ExportState.Total = result.Folders.Aggregate(0, (a, f) => a + f.CountNodesInTree()) + result.Tags.Count;
-            
+            if (ExportState != null)
+            {
+                ExportState.ModelName = "tags and folders";
+                ExportState.Total = result.Folders.Aggregate(0, (a, f) => a + f.CountNodesInTree()) + result.Tags.Count;
+            }
+
             Post(result.Tags.Values.ToList(), tagsUrl);
-            ExportState.Uploaded += result.Tags.Count;
+            if (ExportState != null)
+            {
+                ExportState.Uploaded += result.Tags.Count;
+            }
 
             Post(result.Folders, foldersUrl);
-            ExportState.Uploaded += result.Folders.Count;
 
             ResetState(false);
         }
