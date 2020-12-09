@@ -308,6 +308,6 @@
   <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
-    <PostBuildEvent>$(SolutionDir).nuget\NuGet.exe pack $(ProjectDir)KachingPlugIn.Web.nuspec -OutputDirectory $(ProjectDir)..\..\..\..\..\nugets -IncludeReferencedProjects -Properties Configuration=$(Configuration)</PostBuildEvent>
+    <PostBuildEvent>$(SolutionDir).nuget\NuGet.exe pack $(ProjectDir)KachingPlugIn.Web.nuspec -OutputDirectory C:\TEMP\nugets -IncludeReferencedProjects -Properties Configuration=$(Configuration)</PostBuildEvent>
   </PropertyGroup>
 </Project>

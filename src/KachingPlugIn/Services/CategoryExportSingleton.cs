@@ -21,9 +21,9 @@ namespace KachingPlugIn.Services
             _categoryExportService.ExportState = this;
         }
 
-        public void StartFullCategoryExport(string tagsUrl, string foldersUrl)
+        public void StartFullCategoryExport()
         {
-            _categoryExportService.StartFullCategoryExport(tagsUrl, foldersUrl);
+            _categoryExportService.StartFullCategoryExport();
         }
     }
 }

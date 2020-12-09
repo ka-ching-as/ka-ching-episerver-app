@@ -57,7 +57,7 @@ namespace KachingPlugIn.Web.KachingPlugIn.Controllers
         {
             _log.Information("StartFullCategoryExport");
             var configuration = KachingConfiguration.Instance;
-            _categoryExport.StartFullCategoryExport(configuration.TagsImportUrl, configuration.FoldersImportUrl);
+            _categoryExport.StartFullCategoryExport();
             return RedirectToAction("Index");
         }
 
