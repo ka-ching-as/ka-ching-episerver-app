@@ -53,6 +53,7 @@ namespace KachingPlugIn.EventHandlers
             catalogEvents.RelationUpdated += OnRelationUpdated;
 
             contentEvents.CreatedContent += OnCreatedContent;
+            contentEvents.DeletedContent += OnDeletedContent;
             contentEvents.DeletingContent += OnDeletingContent;
             contentEvents.MovedContent += OnMovedContent;
             contentEvents.PublishedContent += OnPublishedContent;
@@ -69,6 +70,7 @@ namespace KachingPlugIn.EventHandlers
             catalogEvents.RelationUpdated -= OnRelationUpdated;
 
             contentEvents.CreatedContent -= OnCreatedContent;
+            contentEvents.DeletedContent -= OnDeletedContent;
             contentEvents.DeletingContent -= OnDeletingContent;
             contentEvents.MovedContent -= OnMovedContent;
             contentEvents.PublishedContent -= OnPublishedContent;
@@ -159,6 +161,29 @@ namespace KachingPlugIn.EventHandlers
             }
         }
 
+        private void OnDeletedContent(object sender, DeleteContentEventArgs e)
+        {
+            Logger.Debug("OnDeletedContent raised.");
+
+            ContentReference deletedContentLink = e.ContentLink;
+            if (ContentReference.IsNullOrEmpty(deletedContentLink) ||
+                deletedContentLink.ProviderName != ReferenceConverter.CatalogProviderKey)
+            {
+                Logger.Debug("Deleted content is not catalog content.");
+                return;
+            }
+
+            CatalogContentType catalogContentType = _referenceConverter.GetContentType(deletedContentLink);
+            if (catalogContentType != CatalogContentType.CatalogNode)
+            {
+                Logger.Debug("Deleted content is not a catalog node.");
+                return;
+            }
+
+            // Force a full category structure re-export. This has to be done AFTER the category has been deleted.
+            _categoryExportService.StartFullCategoryExport();
+        }
+
         private void OnDeletingContent(object sender, DeleteContentEventArgs e)
         {
             Logger.Debug("OnDeletingContent raised.");
@@ -181,7 +206,6 @@ namespace KachingPlugIn.EventHandlers
                     break;
                 case NodeContent nodeContent:
                     _productExportService.DeleteChildProducts(nodeContent);
-                    _categoryExportService.StartFullCategoryExport();
                     break;
             }
         }
