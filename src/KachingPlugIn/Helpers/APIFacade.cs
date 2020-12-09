@@ -18,7 +18,7 @@ namespace KachingPlugIn.Helpers
 
         public static async Task<HttpStatusCode> DeleteAsync(IEnumerable<string> ids, string url)
         {
-            string deleteUrl = url + "&ids=" + string.Join(",", ids);
+            string deleteUrl = url + "&ids=" + HttpUtility.UrlEncode(string.Join(",", ids));
             Logger.Information("Delete url: " + deleteUrl);
 
             WebRequest request = WebRequest.Create(deleteUrl);
