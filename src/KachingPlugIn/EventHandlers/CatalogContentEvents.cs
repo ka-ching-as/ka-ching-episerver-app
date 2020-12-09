@@ -50,7 +50,6 @@ namespace KachingPlugIn.EventHandlers
             catalogKeyEventBroadcaster.PriceUpdated += OnPriceUpdated;
 
             catalogEvents.AssociationUpdating += OnAssociationUpdated;
-            catalogEvents.RelationUpdated += OnRelationUpdated;
 
             contentEvents.CreatedContent += OnCreatedContent;
             contentEvents.DeletedContent += OnDeletedContent;
@@ -67,7 +66,6 @@ namespace KachingPlugIn.EventHandlers
             catalogKeyEventBroadcaster.PriceUpdated -= OnPriceUpdated;
 
             catalogEvents.AssociationUpdating -= OnAssociationUpdated;
-            catalogEvents.RelationUpdated -= OnRelationUpdated;
 
             contentEvents.CreatedContent -= OnCreatedContent;
             contentEvents.DeletedContent -= OnDeletedContent;
@@ -90,36 +88,6 @@ namespace KachingPlugIn.EventHandlers
             }
 
             _productExportService.ExportProductRecommendations(products, null);
-        }
-
-        private void OnRelationUpdated(object sender, RelationEventArgs e)
-        {
-            Logger.Debug("OnRelationUpdated raised.");
-
-            // If there are changes related to catalog entries, export them.
-            if (e.EntryRelationChanges.Any() || e.NodeEntryRelationChanges.Any())
-            {
-                // TODO
-                ICollection<ProductContent> products = GetProductsAffected(e);
-                foreach (ProductContent product in products)
-                {
-                    _productExportService.ExportProduct(product, null);
-                }
-            }
-
-            if (!e.NodeRelationChanges.Any())
-            {
-                return;
-            }
-
-            // If there are changes between catalog nodes, export child entries and the full catalog structure.
-            ICollection<NodeContent> nodes = GetNodesAffected(e);
-            foreach (NodeContent node in nodes)
-            {
-                _productExportService.ExportChildProducts(node);
-            }
-
-            _categoryExportService.StartFullCategoryExport();
         }
 
         private void OnCreatedContent(object sender, ContentEventArgs e)
